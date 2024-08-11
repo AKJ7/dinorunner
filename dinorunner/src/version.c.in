@@ -1,0 +1,12 @@
+#include "dinorunner.h"
+
+static const unsigned char kVersionMajor = @CMAKE_PROJECT_VERSION_MAJOR@;
+static const unsigned char kVersionMinor = @CMAKE_PROJECT_VERSION_MINOR@;
+static const unsigned char kVersionPatch = @CMAKE_PROJECT_VERSION_PATCH@;
+
+unsigned char dinorunner_getversion(struct version_s* version) {
+  version->major = kVersionMajor;
+  version->minor = kVersionMinor;
+  version->patch = kVersionPatch;
+  return 1u;
+}
