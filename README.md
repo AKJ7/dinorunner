@@ -40,3 +40,7 @@ unsigned char dinorunner_log(const char* format, ...);
 ```shell
 docker compose -f docker-compose.yml up
 ```
+
+## TODO  
+- [ ] Add sound and vibration support
+- [ ] Improve configurability
