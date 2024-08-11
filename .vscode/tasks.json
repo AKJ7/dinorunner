@@ -1,0 +1,133 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Library",
+            "type": "shell",
+            "command": "cmake -DCMAKE_BUILD_TYPE=Release -S ${cwd}/dinorunner -B ${cwd}/dinorunner/build && cmake --build ${cwd}/dinorunner/build",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Build dinorunner library files",
+            "icon": {
+                "id": "rocket",
+                "color": "terminal.ansiGreen"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "Hard clean",
+            "type": "shell",
+            "command": "rm -rf ${cwd}/dinorunner/build",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "Remove build directory",
+            "icon": {
+                "id": "trash",
+                "color": "terminal.ansiRed"
+            }
+        },
+        {
+            "label": "Build Demo",
+            "type": "shell",
+            "command": "cmake -DCMAKE_BUILD_TYPE=Release -S ${cwd}/demo -B ${cwd}/demo/build && cmake --build ${cwd}/demo/build",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Build dinorunner demo executable",
+            "icon": {
+                "id": "rocket",
+                "color": "terminal.ansiBlue"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            },
+            "dependsOn": [
+                "Build Library"
+            ]
+        },
+        {
+            "label": "Run Demo",
+            "type": "shell",
+            "command": "${cwd}/demo/bin/dinorunner_sdl",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "Run SDL Dino demo",
+            "icon": {
+                "id": "notebook-execute",
+                "color": "terminal.ansiBlue"
+            },
+            "dependsOn": [
+                "Build Demo"
+            ]
+        },
+        {
+            "label": "Analyze Demo",
+            "type": "shell",
+            "command": "valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ${cwd}/demo/bin/dinorunner_sdl",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "Use Valgrind to detect leaks and bugs",
+            "icon": {
+                "id": "bug",
+                "color": "terminal.ansiBlue"
+            },
+            "dependsOn": [
+                "Build Demo"
+            ]
+        },
+        {
+            "label": "Disassemble Libary",
+            "type": "shell",
+            "command": "objdump -dSfl ${cwd}/dinorunner/lib/libdinorunner.so > ${input:disassemble_file_dest}",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "Disassemble the Dinorunner library",
+            "icon": {
+                "id": "file-binary",
+                "color": "terminal.ansiYellow"
+            },
+            "dependsOn": [
+                "Build Library"
+            ]
+        },
+    ],
+    "inputs": [
+        {
+            "id": "disassemble_file_dest",
+            "description": "Input path of the library disassemble",
+            "default": "./disassembled.s",
+            "type": "promptString"
+        }
+    ]
+}

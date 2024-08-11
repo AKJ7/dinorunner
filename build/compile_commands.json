@@ -1,0 +1,146 @@
+[
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/clouds.c.o -c /workspaces/dinorunner/dinorunner/src/clouds.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/clouds.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/clouds.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/dinorunner.c.o -c /workspaces/dinorunner/dinorunner/src/dinorunner.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/dinorunner.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/dinorunner.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/distance_meter.c.o -c /workspaces/dinorunner/dinorunner/src/distance_meter.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/distance_meter.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/distance_meter.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/game_over_panel.c.o -c /workspaces/dinorunner/dinorunner/src/game_over_panel.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/game_over_panel.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/game_over_panel.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/horizon.c.o -c /workspaces/dinorunner/dinorunner/src/horizon.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/horizon.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/horizon.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/horizon_line.c.o -c /workspaces/dinorunner/dinorunner/src/horizon_line.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/horizon_line.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/horizon_line.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/nightmode.c.o -c /workspaces/dinorunner/dinorunner/src/nightmode.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/nightmode.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/nightmode.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/obstacle.c.o -c /workspaces/dinorunner/dinorunner/src/obstacle.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/obstacle.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/obstacle.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/sprites.c.o -c /workspaces/dinorunner/dinorunner/src/sprites.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/sprites.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/sprites.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/trex.c.o -c /workspaces/dinorunner/dinorunner/src/trex.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/trex.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/trex.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/utils.c.o -c /workspaces/dinorunner/dinorunner/src/utils.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/utils.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/utils.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc -Ddinorunner_shared_EXPORTS -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -fPIC -Wall -Wextra -Wpedantic -o CMakeFiles/dinorunner_shared.dir/src/version.c.o -c /workspaces/dinorunner/dinorunner/src/version.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/version.c",
+  "output": "CMakeFiles/dinorunner_shared.dir/src/version.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/clouds.c.o -c /workspaces/dinorunner/dinorunner/src/clouds.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/clouds.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/clouds.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/dinorunner.c.o -c /workspaces/dinorunner/dinorunner/src/dinorunner.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/dinorunner.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/dinorunner.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/distance_meter.c.o -c /workspaces/dinorunner/dinorunner/src/distance_meter.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/distance_meter.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/distance_meter.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/game_over_panel.c.o -c /workspaces/dinorunner/dinorunner/src/game_over_panel.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/game_over_panel.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/game_over_panel.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/horizon.c.o -c /workspaces/dinorunner/dinorunner/src/horizon.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/horizon.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/horizon.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/horizon_line.c.o -c /workspaces/dinorunner/dinorunner/src/horizon_line.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/horizon_line.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/horizon_line.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/nightmode.c.o -c /workspaces/dinorunner/dinorunner/src/nightmode.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/nightmode.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/nightmode.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/obstacle.c.o -c /workspaces/dinorunner/dinorunner/src/obstacle.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/obstacle.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/obstacle.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/sprites.c.o -c /workspaces/dinorunner/dinorunner/src/sprites.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/sprites.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/sprites.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/trex.c.o -c /workspaces/dinorunner/dinorunner/src/trex.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/trex.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/trex.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/utils.c.o -c /workspaces/dinorunner/dinorunner/src/utils.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/utils.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/utils.c.o"
+},
+{
+  "directory": "/workspaces/dinorunner/build",
+  "command": "/usr/bin/gcc  -I/workspaces/dinorunner/build -I/workspaces/dinorunner/dinorunner -I/workspaces/dinorunner/dinorunner/include -O3 -DNDEBUG -std=gnu99 -o CMakeFiles/dinorunner_static.dir/src/version.c.o -c /workspaces/dinorunner/dinorunner/src/version.c",
+  "file": "/workspaces/dinorunner/dinorunner/src/version.c",
+  "output": "CMakeFiles/dinorunner_static.dir/src/version.c.o"
+}
+]

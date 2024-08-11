@@ -1,0 +1,8 @@
+/workspaces/dinorunner/build/CMakeFiles/dinorunner_shared.dir
+/workspaces/dinorunner/build/CMakeFiles/dinorunner_static.dir
+/workspaces/dinorunner/build/CMakeFiles/edit_cache.dir
+/workspaces/dinorunner/build/CMakeFiles/rebuild_cache.dir
+/workspaces/dinorunner/build/CMakeFiles/list_install_components.dir
+/workspaces/dinorunner/build/CMakeFiles/install.dir
+/workspaces/dinorunner/build/CMakeFiles/install/local.dir
+/workspaces/dinorunner/build/CMakeFiles/install/strip.dir

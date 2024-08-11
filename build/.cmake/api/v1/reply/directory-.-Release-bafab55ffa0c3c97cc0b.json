@@ -1,0 +1,140 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 59,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 67,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 75,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 97,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 101,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"/workspaces/dinorunner/dinorunner/lib/libdinorunner.so.1.0.0",
+				"/workspaces/dinorunner/dinorunner/lib/libdinorunner.so.1"
+			],
+			"targetId" : "dinorunner_shared::@6890427a1f51a3e7e1df",
+			"targetIndex" : 0,
+			"targetInstallNamelink" : "skip",
+			"type" : "target"
+		},
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"/workspaces/dinorunner/dinorunner/lib/libdinorunner.so"
+			],
+			"targetId" : "dinorunner_shared::@6890427a1f51a3e7e1df",
+			"targetIndex" : 0,
+			"targetInstallNamelink" : "only",
+			"type" : "target"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "lib",
+			"paths" : 
+			[
+				"/workspaces/dinorunner/dinorunner/lib/libdinorunner.a"
+			],
+			"targetId" : "dinorunner_static::@6890427a1f51a3e7e1df",
+			"targetIndex" : 1,
+			"type" : "target"
+		},
+		{
+			"backtrace" : 3,
+			"component" : "Devel",
+			"destination" : "include",
+			"paths" : 
+			[
+				"include/dinorunner.h",
+				"/workspaces/dinorunner/build/dinorunner_export.h"
+			],
+			"type" : "file"
+		},
+		{
+			"backtrace" : 4,
+			"component" : "Unspecified",
+			"destination" : "lib/cmake/dinorunner",
+			"exportName" : "dinorunnerTargets",
+			"exportTargets" : 
+			[
+				{
+					"id" : "dinorunner_shared::@6890427a1f51a3e7e1df",
+					"index" : 0
+				},
+				{
+					"id" : "dinorunner_static::@6890427a1f51a3e7e1df",
+					"index" : 1
+				}
+			],
+			"paths" : 
+			[
+				"CMakeFiles/Export/cbe3ce0654dbbee858f578dd83fb54fe/dinorunnerTargets.cmake"
+			],
+			"type" : "export"
+		},
+		{
+			"backtrace" : 5,
+			"component" : "Devel",
+			"destination" : "lib/cmake/dinorunner",
+			"paths" : 
+			[
+				"cmake/dinorunnerConfig.cmake",
+				"/workspaces/dinorunner/build/dinorunner/dinorunnerConfigVersion.cmake"
+			],
+			"type" : "file"
+		}
+	],
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	}
+}

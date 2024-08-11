@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "*.cpp": "cpp",
+        "*.hpp": "cpp",
+        "dinorunner.h": "c",
+        "inttypes.h": "c",
+        "stdint.h": "c",
+        "sdl.h": "c"
+    },
+    "git.path": "/usr/bin/git",
+    "cmake.sourceDirectory": "/workspaces/dinorunner/dinorunner",
+    "editor.formatOnSave": true
+}
