@@ -9,10 +9,11 @@ This project contains a port of the famous Chrome's Dinosaur Game written in C.
 It is designed to be used as a configurable backend library accessable to a wide range of programming languages (using i.e. CFFIs) and hardware architectures.
 
 **Features**:
-- No hardware-specific dependencies: Runs everywhere
-- No compiler-specific dependencies: Compile and go
+- Hardware-agnostic: No hardware-specific dependencies - Runs everywhere
+- Compiler-agnostic: No compiler-specific dependencies - Compile and go
 - No `stdlib` or header lib requirement
-- No `typedef`
+- No heap allocations
+- No `typedef`s
 
 The dinorunner was inspired by https://github.com/wayou/t-rex-runner from which the trex-assets were fetched.
 
@@ -36,11 +37,24 @@ unsigned char dinorunner_log(const char* format, ...);
 </p>   
 
 ## Usage  
-
+This project provides a preset docker container into which the program compiles and runs.
+The simplest way to run the program is using docker-compose:
 ```shell
 docker compose -f docker-compose.yml up
 ```
+Alternaively, using CMake:
+```shell
+cmake -DCMAKE_BUILD_TYPE=Release -S demo -B demo/build && cmake --build demo/build
+```
+while requiring `libsdl2-dev` `libsdl2-image-dev` `libsdl2-gfx-dev` installable with:
+```shell
+sudo apt -y install libsdl2-dev libsdl2-image-dev libsdl2-gfx-dev
+```
+The lib can be installed system-wide using the `sudo make install` command after generating 
+the Makefiles using CMake.
 
 ## TODO  
 - [ ] Add sound and vibration support
 - [ ] Improve configurability
+- [ ] Add night mode
+- [ ] Add Python/Pygame demo
