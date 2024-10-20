@@ -67,16 +67,26 @@ struct canvas_s;
 
 struct canvas_ctx_s;
 
+/**
+ * @brief Container to store coordinates of sprites
+ */
 struct pos_s {
   int x;
   int y;
 };
 
+/**
+ * @brief Container to store the Width and height of 
+ * various objects
+ */
 struct dimension_s {
   unsigned width;
   unsigned height;
 };
 
+/**
+ * @brief Structure to store a cloud's informations
+ */
 struct cloud_s {
   int x;
   int y;
@@ -88,6 +98,9 @@ struct cloud_s {
   struct pos_s sprite_pos;
 };
 
+/**
+ * @brief Enumeration of all various obstacle types used in the game
+ */
 enum obstacle_type_e {
   OBSTACLE_TYPE_CACTUS_SMALL,
   OBSTACLE_TYPE_CACTUS_LARGE,
@@ -95,6 +108,9 @@ enum obstacle_type_e {
   OBSTACLE_TYPE_NONE
 };
 
+/**
+ * @brief Enumeration of various sprites used in the game
+ */
 enum dinorunner_sprite_e {
   DINORUNNER_SPRITE_CACTUSLARGE1,
   DINORUNNER_SPRITE_CACTUSLARGE2,
@@ -134,6 +150,26 @@ enum dinorunner_sprite_e {
   DINORUNNER_SPRITE_GAMEOVER
 };
 
+/**
+ * @brief Enumeration of the sound effects used in the game
+ */
+enum dinorunner_sound_e { DINORUNNER_SOUND_BUTTON_PRESS, DINORUNNER_SOUND_SCORE, DINORUNNER_SOUND_HIT };
+
+/**
+ * @brief Enumeration of the state of the trex
+ */
+enum trex_status_e {
+  TREX_STATUS_NONE,
+  TREX_STATUS_CRASHED,
+  TREX_STATUS_DUCKING,
+  TREX_STATUS_JUMPING,
+  TREX_STATUS_RUNNING,
+  TREX_STATUS_WAITING,
+};
+
+/**
+ * @brief Structure containing informations of an obstacle
+ */
 struct obstacle_s {
   unsigned char is_alive;
   unsigned char remove;
@@ -168,6 +204,9 @@ struct obstacle_s {
   void* user_data;
 };
 
+/**
+ * @brief Structure containing information of the nightmode state
+ */
 struct nightmode_s {
   int x_pos;
   int y_pos;
@@ -178,6 +217,9 @@ struct nightmode_s {
   unsigned char draw_stars;
 };
 
+/**
+ * @brief Structure containing information of the horizonline object
+ */
 struct horizonline_s {
   struct pos_s sprite_pos;
   struct pos_s source_x_pos;
@@ -190,6 +232,9 @@ struct horizonline_s {
   void* user_data;
 };
 
+/**
+ * @brief Structure containing information of the horizon object
+ */
 struct horizon_s {
   struct config_s {
     float bumpy_threshold;
@@ -215,12 +260,9 @@ struct horizon_s {
   int obstacle_index;
 };
 
-struct sprite_s {
-  unsigned width;
-  unsigned height;
-  const unsigned char* bitmap;
-};
-
+/**
+ * @brief Structure containing the information of the distance counter
+ */
 struct distance_meter_s {
   unsigned short achievement;
   unsigned int high_score;
@@ -237,23 +279,18 @@ struct distance_meter_s {
   void* user_data;
 };
 
+/**
+ * @brief Structure representing the gameover sprite
+ */
 struct gameoverpanel_s {
   struct pos_s text_image_pos_;
   struct pos_s restart_image_pos;
   struct dimension_s canvas_dimension;
 };
 
-enum dinorunner_sound_e { DINORUNNER_SOUND_BUTTON_PRESS, DINORUNNER_SOUND_SCORE, DINORUNNER_SOUND_HIT };
-
-enum trex_status_e {
-  TREX_STATUS_NONE,
-  TREX_STATUS_CRASHED,
-  TREX_STATUS_DUCKING,
-  TREX_STATUS_JUMPING,
-  TREX_STATUS_RUNNING,
-  TREX_STATUS_WAITING,
-};
-
+/**
+ * @brief Structure representing the information of the trex object
+ */
 struct trex_s {
   unsigned char playing_intro;
   unsigned char speed_drop;
@@ -282,6 +319,9 @@ struct trex_s {
   void* user_data;
 };
 
+/**
+ * @brief Structure containing the dinorunner game info
+ */
 struct dinorunner_s {
   struct dimension_s dimension;
   struct distance_meter_s distance_meter;
@@ -309,34 +349,221 @@ struct dinorunner_s {
   unsigned char inverted;
 };
 
+/**
+ * @brief Structure to store the game version
+ */
 struct version_s {
   unsigned char major;
   unsigned char minor;
   unsigned char patch;
 };
 
+/**
+ * @brief Port of std::memcpy as there are not standard library routines available
+ * 
+ * @param dest Destination buffer to copy into
+ * @param src Source buffer to copy from
+ * @param n Number of bytes to copy
+ * @internal
+ */
 void dinorunner_memcpy(void* dest, const void* src, unsigned n);
+
+/**
+ * @brief Computes the smallest integer value not less than f
+ * 
+ * @param f Value to ceil
+ * @return float Smallest integer value not less than f
+ * @internal
+ */
 float dinorunner_ceilf(float f);
+
+/**
+ * @brief Computes the largest integer value not greater than x
+ * 
+ * @param x Value to floor
+ * @return float Largest integer value not greater than x
+ * @internal
+ */
 float dinorunner_floorf(float x);
+
+/**
+ * @brief Compute the result of the first argument raised to the power
+ * of the second
+ * 
+ * @param x Base value
+ * @param y Exponent of base
+ * @return float Power of x raised to y
+ * @internal 
+ */
 float dinorunner_pow(float x, int y);
+
+/**
+ * @brief Computes the nearest integer value to x
+ * 
+ * @param x Value to round
+ * @return float Rounded value
+ * @internal
+ */
 float dinorunner_roundf(float x);
+
+/**
+ * @brief Pseudo-random 16-bit number generator
+ * @ref https://en.wikipedia.org/wiki/Lehmer_random_number_generator
+ * 
+ * @return unsigned Random number between 0 and 0xFFFF
+ * @internal
+ */
 unsigned dinorunner_rand(void);
+
+/**
+ * @brief Pseudo-random float number generator
+ * 
+ * @return float Random float between 0.0f and 1.0f
+ * @internal
+ */
 float dinorunner_srand(void);
+
+/**
+ * @brief Generate a random integer given an interval 
+ * 
+ * @param min_value Minimum value the random integer is allowed to have
+ * @param max_value Maximum value the random integer is allowed to have
+ * @return unsigned Random value between min_value and max_value
+ * @internal
+ */
 unsigned dinorunner_getrandomnumb(unsigned min_value, unsigned max_value);
+
+/**
+ * @brief Get the current version of the library
+ * 
+ * @param version Structure to store the semantic version into
+ * @return unsigned char 1 on success, 0 otherwise.
+ * The only reason for failure is caused when passing a null pointer
+ * as parameter 
+ */
 unsigned char dinorunner_getversion(struct version_s* version);
 
-unsigned char dinorunner_draw_text(char* data, int x, int y);
+/**
+ * @brief Called by the lib to request the vibration of the target device
+ * 
+ * @param duration Amount of time to vibrate
+ * @param user_data Provided userdata
+ * @return unsigned char 1 on success, 0 otherwise as the user sees fit
+ * @interface
+ */
 unsigned char dinorunner_vibrate(unsigned duration, void* user_data);
 
+/**
+ * @brief Draw request to blit a specific sprite onto the canvas
+ * 
+ * @param sprite Sprite to draw
+ * @param pos Position on the canvas to draw on
+ * @param user_data Given userdata
+ * @return unsigned char 1 on succes, 0 otherwise as the user sees fit
+ * @interface
+ */
 unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, void* user_data);
 
+/**
+ * @brief Get the game's running time
+ * 
+ * @return unsigned long Amount of milliseconds that have passed since the game started
+ * @interface
+ */
 unsigned long dinorunner_gettimestamp(void);
-unsigned char dinorunner_sound_play(enum dinorunner_sound_e sound);
-unsigned char dinorunner_writehighscore(unsigned long high_score, void* user_data);
-unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_data);
-unsigned char dinorunner_canvas_clear(void* user_data);
-unsigned char dinorunner_log(const char* message, ...);
 
+/**
+ * @brief Game's request to play a specific sound 
+ * 
+ * @param sound Sound to play
+ * @return unsigned char 1 on success, 0 otherwise as the user sees fit
+ * @interface
+ */
+unsigned char dinorunner_sound_play(enum dinorunner_sound_e sound);
+
+/**
+ * @brief Game's request to store/write the current highscore
+ * 
+ * @param high_score Value of the highscore to write
+ * @param user_data Given userdata
+ * @return unsigned char 1 on success, 0 otherwise as the user sees fit
+ * @interface
+ */
+unsigned char dinorunner_writehighscore(unsigned long high_score, void* user_data);
+
+/**
+ * @brief Game's request to read the current highscore
+ * 
+ * @param high_score Pointer to the variable location to store the value into
+ * @param user_data Given user data
+ * @return unsigned char 1 on success, 0 otherwise as the user sees fit
+ * @interface
+ */
+unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_data);
+
+/**
+ * @brief Game's request to clear the drawing canvas
+ * 
+ * @param user_data Given user data
+ * @return unsigned char 1 on success, 0 otherwise as the user sees fit
+ */
+unsigned char dinorunner_canvas_clear(void* user_data);
+
+/**
+ * @brief Game's request to log messages
+ * 
+ * @param format format of the message to log
+ * @param ... arguments
+ * @return unsigned char 1 on success, 0 otherwise as the user sees fit 
+ * @interface
+ */
+unsigned char dinorunner_log(const char* format, ...);
+
+/**
+ * @brief Initialize the dinorunner instance
+ * 
+ * @param dinorunner Instance of the dinorunner structure to prepare
+ * @param dimension Measurements of the canvas
+ * @param user_data userdata to pass back to the request routines
+ * @return unsigned char 1 on success, 0 otherwise
+ */
+unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dimension_s* dimension, void* user_data);
+
+/**
+ * @brief Update the dinorunner install
+ * Should be triggered betwwen frame updates
+ * 
+ * @param dinorunner Instance of the running dinorunner object
+ * @return unsigned char 1 on success, 0 otherwise
+ */
+unsigned char dinorunner_update(struct dinorunner_s* dinorunner);
+
+/**
+ * @brief Trigger the "key up" input
+ * 
+ * @param dinorunner Instance of the running dinorunner object
+ */
+void dinorunner_onkeyup(struct dinorunner_s* dinorunner);
+
+/**
+ * @brief Trigger the "key down" input
+ * 
+ * @param dinorunner Instance of the running dinorunner object
+ */
+void dinorunner_onkeydown(struct dinorunner_s* dinorunner);
+
+/**
+ * @brief Cancel of key input
+ * 
+ * @param dinorunner Instance of the running dinorunner object
+ */
+void dinorunner_onkeynone(struct dinorunner_s* dinorunner);
+
+/**
+ * @defgroup Internal functions
+ * Used internally by the dinorunner routines
+ * @{
+ */
 void dinorunner_cloud_init(struct cloud_s* cloud, const struct pos_s* sprite_pos, unsigned container_width);
 unsigned char dinorunner_cloud_update(struct cloud_s* cloud, float speed, void* user_data);
 
@@ -385,12 +612,9 @@ void dinorunner_trex_startjump(struct trex_s* trex, float speed);
 void dinorunner_trex_setspeeddrop(struct trex_s* trex);
 void dinorunner_trex_updatejump(struct trex_s* trex, float delta_time);
 void dinorunner_trex_endjump(struct trex_s* trex);
-
-unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dimension_s* dimension, void* user_data);
-unsigned char dinorunner_update(struct dinorunner_s* dinorunner);
-void dinorunner_onkeyup(struct dinorunner_s* dinorunner);
-void dinorunner_onkeydown(struct dinorunner_s* dinorunner);
-void dinorunner_onkeynone(struct dinorunner_s* dinorunner);
+/**
+ * @} 
+ */
 
 #ifdef __cplusplus
 }

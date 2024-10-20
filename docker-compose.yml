@@ -2,15 +2,16 @@ version: '3'
 services:
   dinorunner:
     build: .
+    user: dino_runner
     environment:
-      - DISPLAY=:0
+      - DISPLAY=$DISPLAY
       - SSH_AUTH_SOCK=/tmp/ssh_auth_sock
       - XAUTHORITY=$XAUTHORITY
-      - XDG_RUNTIME_DIR=/run/user/$(id -u)
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - .:/home/dinorunner/dino_runner
-    working_dir: /home/dinorunner/dino_runner
-    network_mode: host
+      - .:/home/dino_runner/dinorunner
+      - /dev/dri:/dev/dri 
+    working_dir: /home/dino_runner/dinorunner
+    network_mode: "host"
     command: >
       bash -c "cmake -DCMAKE_BUILD_TYPE=Release -S demo -B demo/build && cmake --build demo/build && demo/bin/dinorunner_sdl"
