@@ -9,9 +9,9 @@ services:
       - XAUTHORITY=$XAUTHORITY
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - .:/home/dinorunner/dino_runner
+      - .:/home/dino_runner/dinorunner
       - /dev/dri:/dev/dri 
-    working_dir: /home/dinorunner/dino_runner
+    working_dir: /home/dino_runner/dinorunner
     network_mode: "host"
     command: >
       bash -c "cmake -DCMAKE_BUILD_TYPE=Release -S demo -B demo/build && cmake --build demo/build && demo/bin/dinorunner_sdl"
