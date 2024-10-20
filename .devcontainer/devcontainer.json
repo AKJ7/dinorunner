@@ -57,7 +57,8 @@
 				"twxs.cmake",
 				"ms-vscode.cmake-tools",
 				"ms-vscode.cpptools-extension-pack",
-				"xaver.clang-format"
+				"xaver.clang-format",
+				"cschlosser.doxdocgen"
 			]
 		}
 	}

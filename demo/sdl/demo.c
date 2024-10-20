@@ -66,7 +66,7 @@ static uint8_t system_init(hypervisor_s* hypervisor);
 static uint8_t system_run(hypervisor_s* hypervisor);
 static uint8_t system_exit(hypervisor_s* hypervisor);
 
-int main() {
+int main(int argc, char** argv) {
   hypervisor_s hypervisor;
   uint8_t status = system_preinit(&hypervisor);
   status &= system_init(&hypervisor);
@@ -136,7 +136,7 @@ static uint8_t system_init(hypervisor_s* hypervisor) {
     LOG("SDL Window could not be created: %s", SDL_GetError());
     return 0u;
   }
-  hypervisor->g_renderer = SDL_CreateRenderer(hypervisor->g_window, -1, SDL_RENDERER_ACCELERATED);
+  hypervisor->g_renderer = SDL_CreateRenderer(hypervisor->g_window, -1, SDL_RENDERER_PRESENTVSYNC);
   if (!hypervisor->g_renderer) {
     LOG("SDL Renderer could not be created: %s", SDL_GetError());
     return 0u;
