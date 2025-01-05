@@ -1,3 +1,11 @@
+/**
+ * @file dinorunner.c
+ * 
+ * @copyright Copyright (C) 2025 - All Rights Reserved 
+ *  You may use, distribute and modify this code under the 
+ *  terms of the GPL license.
+ */
+
 #include "dinorunner.h"
 
 struct dimension_s text_dimension = {.width = 10, .height = 13};

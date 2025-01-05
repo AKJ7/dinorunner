@@ -1,3 +1,11 @@
+/**
+ * @file clouds.c
+ * 
+ * @copyright Copyright (C) 2025 - All Rights Reserved 
+ *  You may use, distribute and modify this code under the 
+ *  terms of the GPL license.
+ */
+
 #include "dinorunner.h"
 
 static inline unsigned char dinorunner_cloud_isvisible(const struct cloud_s* cloud) {
