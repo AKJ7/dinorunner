@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(dinorunner-demos
-    VERSION 1.0.1
+    VERSION 1.1.0
     DESCRIPTION "Running examples of the Dinorunner libray"
     LANGUAGES C CXX)
 
@@ -9,7 +9,6 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(DINORUNNER_LIB_PATH ${PROJECT_SOURCE_DIR}/../dinorunner)
-
 
 include(FindPkgConfig)
 include(ExternalProject)

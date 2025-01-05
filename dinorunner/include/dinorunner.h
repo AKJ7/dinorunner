@@ -1,3 +1,11 @@
+/**
+ * @file dinorunner.h
+ * 
+ * @copyright Copyright (C) 2025 - All Rights Reserved 
+ *  You may use, distribute and modify this code under the 
+ *  terms of the GPL license.
+ */
+
 #ifndef DINORUNNER_DINORUNNER_H
 #define DINORUNNER_DINORUNNER_H
 
@@ -63,6 +71,16 @@ extern "C" {
 #define DINORUNNER_CONFIG_TREX_BLINK_TIMING 7000
 #define DINORUNNER_CONFIG_TREX_BOTTOM_PAD 5
 
+#define DINORUNNER_CONFIG_NIGHTMODE_FADESPEED 0.035
+#define DINORUNNER_CONFIG_NIGHTMODE_HEIGHT 40
+#define DINORUNNER_CONFIG_NIGHTMODE_WIDTH 20
+#define DINORUNNER_CONFIG_NIGHTMODE_MOONSPEED 0.25
+#define DINORUNNER_CONFIG_NIGHTMODE_NUMBSTARS 2
+#define DINORUNNER_CONFIG_NIGHTMODE_STARSIZE 9
+#define DINORUNNER_CONFIG_NIGHTMODE_STARSPEED 0.3
+#define DINORUNNER_CONFIG_NIGHTMODE_STARMAXY 70
+#define DINORUNNER_CONFIG_NIGHTMODE_MOONPHASES 7
+
 struct canvas_s;
 
 struct canvas_ctx_s;
@@ -124,7 +142,13 @@ enum dinorunner_sprite_e {
   DINORUNNER_SPRITE_CLOUD,
   DINORUNNER_SPRITE_HORIZON1,
   DINORUNNER_SPRITE_HORIZON2,
-  DINORUNNER_SPRITE_MOON,
+  DINORUNNER_SPRITE_MOON1,
+  DINORUNNER_SPRITE_MOON2,
+  DINORUNNER_SPRITE_MOON3,
+  DINORUNNER_SPRITE_MOON4,
+  DINORUNNER_SPRITE_MOON5,
+  DINORUNNER_SPRITE_MOON6,
+  DINORUNNER_SPRITE_MOON7,
   DINORUNNER_SPRITE_RESTART,
   DINORUNNER_SPRITE_TEXT,
   DINORUNNER_SPRITE_TREX_STANDING1,
@@ -135,7 +159,9 @@ enum dinorunner_sprite_e {
   DINORUNNER_SPRITE_TREX_DUCKING1,
   DINORUNNER_SPRITE_TREX_DUCKING2,
   DINORUNNER_SPRITE_TREX_JUMPING,
-  DINORUNNER_SPRITE_STAR,
+  DINORUNNER_SPRITE_STAR1,
+  DINORUNNER_SPRITE_STAR2,
+  DINORUNNER_SPRITE_STAR3,
   DINORUNNER_SPRITE_0,
   DINORUNNER_SPRITE_1,
   DINORUNNER_SPRITE_2,
@@ -205,15 +231,24 @@ struct obstacle_s {
 };
 
 /**
+ * @brief Structure defining a star property
+ */
+struct star_s {
+  float x;
+  float y;
+};
+
+/**
  * @brief Structure containing information of the nightmode state
  */
 struct nightmode_s {
-  int x_pos;
-  int y_pos;
-  int current_phase;
+  float x_pos;
+  float y_pos;
+  struct pos_s sprite_pos;
+  unsigned char current_phase;
   float opacity;
   unsigned container_width;
-  void* stars;
+  struct star_s stars[DINORUNNER_CONFIG_NIGHTMODE_NUMBSTARS];
   unsigned char draw_stars;
 };
 
@@ -338,7 +373,7 @@ struct dinorunner_s {
   float current_speed;
   unsigned char activated;
   unsigned char paused;
-  unsigned char inverte_trigger;
+  unsigned char invert_trigger;
   unsigned char playing_intro;
   unsigned long invert_timer;
   unsigned long play_count;
@@ -359,7 +394,7 @@ struct version_s {
 };
 
 /**
- * @brief Port of std::memcpy as there are not standard library routines available
+ * @brief Port of memcpy as there are not standard library routines available
  * 
  * @param dest Destination buffer to copy into
  * @param src Source buffer to copy from
@@ -539,6 +574,24 @@ unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dime
 unsigned char dinorunner_update(struct dinorunner_s* dinorunner);
 
 /**
+ * @brief Get nightmode opacity
+ * 
+ * @param dinorunner Instance of the running dinorunner object
+ * @param opacity Actual opacity into with the value should be stored
+ * @return unsigned char 1 on success, 0 otherwise
+ */
+unsigned char dinorunner_opacity(struct dinorunner_s* dinorunner, unsigned char* opacity);
+
+/**
+ * @brief Get the inverted/night-mode state
+ * 
+ * @param dinorunner Instance of the running dinorunner object
+ * @param night_mode Variable into which to store the actual nightmode state
+ * @return unsigned char 1 on success, 0 otherwise
+ */
+unsigned char dinorunner_isinverted(struct dinorunner_s* dinorunner, unsigned char* night_mode);
+
+/**
  * @brief Trigger the "key up" input
  * 
  * @param dinorunner Instance of the running dinorunner object
@@ -599,9 +652,9 @@ unsigned dinorunner_distancemeter_getactualdistance(unsigned distance);
 unsigned char dinorunner_distancemeter_update(struct distance_meter_s* distance_meter, float delta_time,
                                               unsigned long distance, void* user_data);
 
-unsigned char dinorunner_nightmode_init(struct nightmode_s* nightmode, const struct pos_s* pos, unsigned width);
-void dinorunner_nightmode_reset(struct nightmode_s* nightmode);
-unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigned char show_nightmode);
+void dinorunner_nightmode_init(struct nightmode_s* nightmode, const struct pos_s* pos, unsigned width);
+void dinorunner_nightmode_reset(struct nightmode_s* nightmode, void* user_data);
+unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigned char show_nightmode, void* user_data);
 
 unsigned char dinorunner_trex_init(struct trex_s* trex, const struct pos_s* sprite_pos, unsigned container_width,
                                    unsigned container_height);
