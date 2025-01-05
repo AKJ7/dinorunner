@@ -136,7 +136,7 @@ static uint8_t load_scorefile(hypervisor_s* hypervisor) {
 }
 
 static uint8_t system_init(hypervisor_s* hypervisor) {
-  LOG("%s", "Starting hypervisor");
+  LOG("%s %u", "Starting hypervisor with size: ", (unsigned)sizeof(hypervisor->dinorunner));
   struct version_s version           = {0, 0, 0};
   const unsigned char kVersionResult = dinorunner_getversion(&version);
   if (!kVersionResult) {
@@ -266,7 +266,8 @@ unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_dat
   return 1u;
 }
 
-unsigned long dinorunner_gettimestamp(void) {
+unsigned long dinorunner_gettimestamp(void* user_data) {
+  (void)user_data;
   return (unsigned long)SDL_GetTicks();
 }
 
