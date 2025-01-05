@@ -8,6 +8,15 @@ struct pos_s restart_sprite;
 struct pos_s trex_sprite;
 struct dimension_s text_dimension = {.width = 10, .height = 13};
 
+static void dinorunner_invert(struct dinorunner_s* dinorunner, unsigned char reset) {
+  if (reset) {
+    dinorunner->invert_timer = 0u;
+    dinorunner->inverted     = 0u;
+  } else {
+    dinorunner->inverted = dinorunner->invert_trigger;
+  }
+}
+
 unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dimension_s* dimension, void* user_data) {
   unsigned char res                          = 1u;
   dinorunner->dimension.width                = dimension->width;
@@ -26,7 +35,7 @@ unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dime
   dinorunner->playing                        = 0u;
   dinorunner->distance_ran                   = 0u;
   dinorunner->crashed                        = 0u;
-  dinorunner->inverte_trigger                = 0u;
+  dinorunner->invert_trigger                 = 0u;
   dinorunner->playing_intro                  = 0u;
   res &= dinorunner_horizon_init(&dinorunner->horizon, &horizon_sprite_pos, &dinorunner->dimension,
                                  -DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT);
@@ -41,13 +50,6 @@ unsigned char dinorunner_startgame(struct dinorunner_s* dinorunner) {
   dinorunner->playing_intro      = 0u;
   dinorunner->trex.playing_intro = 0u;
   dinorunner->play_count++;
-  return 1u;
-}
-
-unsigned char dinorunner_invert(struct dinorunner_s* dinorunner, unsigned char invert_state) {
-  // TODO: Implement
-  (void)dinorunner;
-  (void)invert_state;
   return 1u;
 }
 
@@ -215,18 +217,18 @@ unsigned char dinorunner_update(struct dinorunner_s* dinorunner) {
       dinorunner_sound_play(DINORUNNER_SOUND_SCORE);
     }
     if (dinorunner->invert_timer > DINORUNNER_CONFIG_CORE_INVERTFADEDURATION) {
-      dinorunner->invert_timer    = 0u;
-      dinorunner->inverte_trigger = 0u;
-      dinorunner_invert(dinorunner, 1u);
+      dinorunner->invert_timer   = 0u;
+      dinorunner->invert_trigger = 0u;
+      dinorunner_invert(dinorunner, 0u);
     } else if (dinorunner->invert_timer) {
       dinorunner->invert_timer += delta_time;
     } else {
       unsigned long actual_distance = dinorunner_distancemeter_getactualdistance(dinorunner->distance_ran);
       if (actual_distance > 0) {
-        dinorunner->inverte_trigger = !(actual_distance % DINORUNNER_CONFIG_CORE_INVERTDISTANCE);
-        if (dinorunner->inverte_trigger && dinorunner->invert_timer == 0) {
+        dinorunner->invert_trigger = !(actual_distance % DINORUNNER_CONFIG_CORE_INVERTDISTANCE);
+        if (dinorunner->invert_trigger && dinorunner->invert_timer == 0) {
           dinorunner->invert_timer += delta_time;
-          dinorunner_invert(dinorunner, 1);
+          dinorunner_invert(dinorunner, 0);
         }
       }
     }
@@ -272,4 +274,14 @@ void dinorunner_onkeydown(struct dinorunner_s* dinorunner) {
 void dinorunner_onkeynone(struct dinorunner_s* dinorunner) {
   dinorunner_trex_setduck(&dinorunner->trex, 0u);
   dinorunner_trex_endjump(&dinorunner->trex);
+}
+
+unsigned char dinorunner_opacity(struct dinorunner_s* dinorunner, unsigned char* opacity) {
+  *opacity = dinorunner->inverted ? (dinorunner->horizon.nightmode.opacity * 0xFF) : 0xFF;
+  return 1u;
+}
+
+unsigned char dinorunner_isinverted(struct dinorunner_s* dinorunner, unsigned char* night_mode) {
+  *night_mode = dinorunner->inverted;
+  return 1u;
 }

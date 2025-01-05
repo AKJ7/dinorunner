@@ -1,3 +1,10 @@
+/**
+ * @file demo.c
+ * 
+ * @copyright Copyright (C) 2025 - All Rights Reserved 
+ *  You may use, distribute and modify this code under the 
+ *  terms of the GPL license.
+ */
 #include <SDL.h>
 #include <SDL2_framerate.h>
 #include <SDL_image.h>
@@ -29,7 +36,7 @@ static const SDL_Rect kPterodactylSprite2    = {.x = 180, .y = 2, .w = 46, .h = 
 static const SDL_Rect kCloudSprite           = {.x = 86, .y = 2, .w = 46, .h = 14};
 static const SDL_Rect kHorizonSprite1        = {.x = 2, .y = 54, .w = 600, .h = 12};
 static const SDL_Rect kHorizonSprite2        = {.x = 602, .y = 54, .w = 600, .h = 12};
-static const SDL_Rect kMoonSprite            = {.x = 484, .y = 2};
+static const SDL_Rect kMoonSprite            = {.x = 484, .y = 2, .w = 20, .h = 40};
 static const SDL_Rect kRestartSprite         = {.x = 2, .y = 2, .w = 36, .h = 32};
 static const SDL_Rect kTextSprite            = {.x = 655, .y = 2, .w = 191, .h = 11};
 static const SDL_Rect kTrexSpriteStanding1   = {.x = 848, .y = 2, .w = 44, .h = 47};
@@ -40,7 +47,7 @@ static const SDL_Rect kTrexSpriteJumping     = {.x = 848, .y = 2, .w = 44, .h = 
 static const SDL_Rect kTrexSpriteCrashed     = {.x = 1068, .y = 2, .w = 44, .h = 47};
 static const SDL_Rect kTrexSpriteDucking1    = {.x = 1112, .y = 2, .w = 59, .h = 47};
 static const SDL_Rect kTrexSpriteDucking2    = {.x = 1171, .y = 2, .w = 59, .h = 47};
-static const SDL_Rect kStartSprite           = {.x = 645, .y = 2};
+static const SDL_Rect kStarSprite            = {.x = 645, .y = 2, .w = 8, .h = 9};
 static const SDL_Rect kHiSprite              = {.x = 754, .y = 2, .w = 20, .h = 13};
 static const SDL_Rect k0Sprite               = {.x = 654, .y = 2, .w = 10, .h = 13};
 static const SDL_Rect KGameoverRestartSprite = {.x = 2, .y = 2, .w = 36, .h = 32};
@@ -48,6 +55,8 @@ static const SDL_Rect KGameoverTextSprite    = {.x = 654, .y = 15, .w = 191, .h 
 static const uint32_t kWindowHeight          = kGameDimension.height + kPadding * 2;
 static const uint32_t kWindowWidth           = kGameDimension.width + kPadding * 2;
 static const uint32_t kFrameRate             = 60u;
+static const uint8_t kBackgroundColor        = 0xF2;
+static const unsigned char kNightModePhases[DINORUNNER_CONFIG_NIGHTMODE_MOONPHASES] = {140, 120, 100, 60, 40, 20, 0};
 
 typedef struct hypervisor_s {
   dinorunner_s dinorunner;
@@ -93,7 +102,8 @@ static uint8_t render_background(hypervisor_s* hypervisor) {
   SDL_SetRenderTarget(hypervisor->g_renderer, hypervisor->g_background);
   int status = SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
   status     = SDL_RenderClear(hypervisor->g_renderer);
-  status     = SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xF2, 0xF2, 0xF2, SDL_ALPHA_OPAQUE);
+  status     = SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor,
+                                      SDL_ALPHA_OPAQUE);
   SDL_assert(status == 0);
   SDL_RenderFillRect(hypervisor->g_renderer, &game_rect);
   return 1u;
@@ -105,6 +115,7 @@ static uint8_t load_sprite(hypervisor_s* hypervisor) {
   SDL_assert(status == img_flags);
   hypervisor->g_sprite = IMG_LoadTexture(hypervisor->g_renderer, sprite_filename);
   SDL_assert(hypervisor->g_sprite);
+  SDL_SetTextureBlendMode(hypervisor->g_sprite, SDL_BLENDMODE_BLEND);
   return 1u;
 }
 
@@ -126,6 +137,12 @@ static uint8_t load_scorefile(hypervisor_s* hypervisor) {
 
 static uint8_t system_init(hypervisor_s* hypervisor) {
   LOG("%s", "Starting hypervisor");
+  struct version_s version           = {0, 0, 0};
+  const unsigned char kVersionResult = dinorunner_getversion(&version);
+  if (!kVersionResult) {
+    return 0u;
+  }
+  LOG("Compiled with libdinorunner v%hu.%hu.%hu", version.major, version.minor, version.patch);
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     LOG("SDL could not initialize! SDL_Error: %s", SDL_GetError());
     return 0u;
@@ -410,9 +427,49 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
       destination_rect.h = KGameoverRestartSprite.h;
       sprite_rect        = &KGameoverRestartSprite;
       break;
+    case DINORUNNER_SPRITE_STAR1:
+    case DINORUNNER_SPRITE_STAR2:
+    case DINORUNNER_SPRITE_STAR3:
+      destination_rect.w = kStarSprite.w;
+      destination_rect.h = kStarSprite.h;
+      temp_target.w      = kStarSprite.w;
+      temp_target.h      = kStarSprite.h;
+      temp_target.x      = kStarSprite.x;
+      temp_target.y      = kStarSprite.y + ((sprite - DINORUNNER_SPRITE_STAR1) * temp_target.h);
+      sprite_rect        = &temp_target;
+      break;
+    case DINORUNNER_SPRITE_MOON1:
+    case DINORUNNER_SPRITE_MOON2:
+    case DINORUNNER_SPRITE_MOON3:
+    case DINORUNNER_SPRITE_MOON4:
+    case DINORUNNER_SPRITE_MOON5:
+    case DINORUNNER_SPRITE_MOON6:
+    case DINORUNNER_SPRITE_MOON7: {
+      unsigned moon_phase = (sprite - DINORUNNER_SPRITE_MOON1);
+      destination_rect.w  = (sprite == DINORUNNER_SPRITE_MOON4) ? kMoonSprite.w * 2 : kMoonSprite.w;
+      destination_rect.h  = kMoonSprite.h;
+      temp_target.w       = destination_rect.w;
+      temp_target.h       = destination_rect.h;
+      temp_target.x       = kMoonSprite.x + kNightModePhases[moon_phase];
+      temp_target.y       = kMoonSprite.y;
+      sprite_rect         = &temp_target;
+    } break;
     default:
-      LOG("Invalid sprite: %d.", (int)sprite);
+      LOG("Request to draw invalid sprite: %d at position: (%d, %d)", (int)sprite, destination_rect.x,
+          destination_rect.y);
       return 0u;
+  }
+  unsigned char is_night_mode = 0;
+  dinorunner_isinverted(&hypervisor->dinorunner, &is_night_mode);
+  unsigned char opacity = 0;
+  dinorunner_opacity(&hypervisor->dinorunner, &opacity);
+  SDL_SetTextureAlphaMod(hypervisor->g_sprite, opacity);
+  SDL_SetTextureAlphaMod(hypervisor->g_background, opacity);
+  if (is_night_mode) {
+    SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF - kBackgroundColor, 0xFF - kBackgroundColor,
+                           0xFF - kBackgroundColor, opacity);
+  } else {
+    SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor, opacity);
   }
   SDL_RenderCopy(hypervisor->g_renderer, hypervisor->g_sprite, sprite_rect, &destination_rect);
   return 1u;

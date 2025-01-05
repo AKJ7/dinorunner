@@ -56,5 +56,5 @@ the Makefiles using CMake.
 ## TODO  
 - [ ] Add sound and vibration support
 - [ ] Improve configurability
-- [ ] Add night mode
+- [x] Add night mode
 - [ ] Add Python/Pygame demo

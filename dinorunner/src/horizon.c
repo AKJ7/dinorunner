@@ -48,6 +48,8 @@ unsigned char dinorunner_horizon_init(struct horizon_s* horizon, const struct po
   horizon->cloud_frequency  = DINORUNNER_CONFIG_CLOUD_FREQUENCY;
   horizon->config.max_cloud = DINORUNNER_CONFIG_CLOUD_MAX_COUNT;
   horizon->first            = 1u;
+  horizon->dimension        = *dimension;
+  horizon->gap_coefficient  = gap_coefficient;
   dinorunner_horizonline_init(&horizon->horizon_line, dimension);
   dinorunner_nightmode_init(&horizon->nightmode, sprite_position, horizon->dimension.width);
   for (unsigned i = 0; i < DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_COUNT; ++i) {
@@ -58,8 +60,6 @@ unsigned char dinorunner_horizon_init(struct horizon_s* horizon, const struct po
   for (unsigned i = 0; i < DINORUNNER_CONFIG_CLOUD_MAX_COUNT; ++i) {
     horizon->clouds[i].is_alive = 0;
   }
-  horizon->dimension       = *dimension;
-  horizon->gap_coefficient = gap_coefficient;
   if (horizon->first) {
     add_cloud(horizon, dimension);
     horizon->first = 0;
@@ -160,7 +160,7 @@ unsigned char dinorunner_horizon_update(struct horizon_s* horizon, float delta_t
                                         unsigned char update_obstacles_request, unsigned char show_night_mode) {
   horizon->running_time += delta_time;
   dinorunner_horizonline_update(&horizon->horizon_line, delta_time, current_speed);
-  dinorunner_nightmode_update(&horizon->nightmode, show_night_mode);
+  dinorunner_nightmode_update(&horizon->nightmode, show_night_mode, horizon->horizon_line.user_data);
   update_clouds(horizon, delta_time, current_speed);
   if (update_obstacles_request) {
     update_obstacles(horizon, delta_time, current_speed);
@@ -173,5 +173,5 @@ void dinorunner_horizon_reset(struct horizon_s* horizon) {
     horizon->obstacles[i].is_alive = 0;
   }
   dinorunner_horizonline_reset(&horizon->horizon_line);
-  dinorunner_nightmode_reset(&horizon->nightmode);
+  dinorunner_nightmode_reset(&horizon->nightmode, horizon->horizon_line.user_data);
 }
