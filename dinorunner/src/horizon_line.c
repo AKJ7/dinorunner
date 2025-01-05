@@ -42,16 +42,12 @@ void dinorunner_horizonline_update(struct horizonline_s* horizonline, float delt
 }
 
 void dinorunner_horizonline_init(struct horizonline_s* horizoneline, const struct dimension_s* src_dimension) {
-  horizoneline->x_pos[0]              = 0;
-  horizoneline->x_pos[1]              = src_dimension->width;
-  horizoneline->bump_threshold        = 0.5f;
-  horizoneline->y_pos                 = src_dimension->height;
-  horizoneline->src_dimensions.width  = src_dimension->width;
-  horizoneline->src_dimensions.height = src_dimension->height;
-  horizoneline->sprite_pos.x          = 0;
-  horizoneline->sprite_pos.y          = 0;
-  horizoneline->dimensions.width      = src_dimension->width;
-  horizoneline->dimensions.height     = src_dimension->height;
-  horizoneline->sprite[0]             = DINORUNNER_SPRITE_HORIZON1;
-  horizoneline->sprite[1]             = DINORUNNER_SPRITE_HORIZON2;
+  horizoneline->x_pos[0]          = 0;
+  horizoneline->x_pos[1]          = src_dimension->width;
+  horizoneline->y_pos             = src_dimension->height;
+  horizoneline->bump_threshold    = 0.5f;
+  horizoneline->dimensions.width  = src_dimension->width;
+  horizoneline->dimensions.height = src_dimension->height;
+  horizoneline->sprite[0]         = DINORUNNER_SPRITE_HORIZON1;
+  horizoneline->sprite[1]         = DINORUNNER_SPRITE_HORIZON2;
 }

@@ -1,11 +1,5 @@
 #include "dinorunner.h"
 
-struct pos_s horizon_sprite_pos = {.x = 0, .y = 0};
-struct pos_s night_mode_moon;
-struct pos_s cloud_sprite;
-struct pos_s text_sprite;
-struct pos_s restart_sprite;
-struct pos_s trex_sprite;
 struct dimension_s text_dimension = {.width = 10, .height = 13};
 
 static void dinorunner_invert(struct dinorunner_s* dinorunner, unsigned char reset) {
@@ -35,12 +29,12 @@ unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dime
   dinorunner->invert_trigger   = 0u;
   dinorunner->playing_intro    = 0u;
   dinorunner->user_data        = user_data;
-  res &= dinorunner_horizon_init(&dinorunner->horizon, &horizon_sprite_pos, &dinorunner->dimension,
-                                 -DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT);
-  dinorunner_distancemeter_init(&dinorunner->distance_meter, &text_dimension, dimension->width, dinorunner->user_data);
+  dinorunner->inverted         = 0u;
   res &=
-      dinorunner_trex_init(&dinorunner->trex, &trex_sprite, dimension->width, dimension->height, dinorunner->user_data);
-  res &= dinorunner_gameoverpanel_init(&dinorunner->gameoverpanel, &text_sprite, &restart_sprite, dimension);
+      dinorunner_horizon_init(&dinorunner->horizon, &dinorunner->dimension, -DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT);
+  dinorunner_distancemeter_init(&dinorunner->distance_meter, &text_dimension, dimension->width, dinorunner->user_data);
+  res &= dinorunner_trex_init(&dinorunner->trex, dimension->width, dimension->height, dinorunner->user_data);
+  res &= dinorunner_gameoverpanel_init(&dinorunner->gameoverpanel, dimension);
   return res;
 }
 
