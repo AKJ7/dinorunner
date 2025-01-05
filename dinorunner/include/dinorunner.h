@@ -489,10 +489,11 @@ unsigned long dinorunner_gettimestamp(void* user_data);
  * @brief Game's request to play a specific sound 
  * 
  * @param sound Sound to play
+ * @param Stored data of the user to pass back
  * @return unsigned char 1 on success, 0 otherwise as the user sees fit
  * @interface
  */
-unsigned char dinorunner_sound_play(enum dinorunner_sound_e sound);
+unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_data);
 
 /**
  * @brief Game's request to store/write the current highscore
@@ -525,12 +526,13 @@ unsigned char dinorunner_canvas_clear(void* user_data);
 /**
  * @brief Game's request to log messages
  * 
+ * @param user_data Given user data to pass
  * @param format format of the message to log
  * @param ... arguments
  * @return unsigned char 1 on success, 0 otherwise as the user sees fit 
  * @interface
  */
-unsigned char dinorunner_log(const char* format, ...);
+unsigned char dinorunner_log(void* user_data, const char* format, ...);
 
 /**
  * @brief Initialize the dinorunner instance

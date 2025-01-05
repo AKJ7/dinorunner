@@ -135,7 +135,7 @@ static void obstacle_draw(const struct obstacle_s* obstacle, void* user_data) {
       sprite = obstacle->current_frame == 0 ? DINORUNNER_SPRITE_PTERODACTYL2 : DINORUNNER_SPRITE_PTERODACTYL1;
       break;
     default:
-      dinorunner_log("Invalid obstacle type: %d\n", obstacle->config.type_config);
+      dinorunner_log(user_data, "Invalid obstacle type: %d\n", obstacle->config.type_config);
       return;
   }
   sprite                 = sprite + (obstacle->size - 1);
