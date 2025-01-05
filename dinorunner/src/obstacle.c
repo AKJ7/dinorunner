@@ -1,3 +1,11 @@
+/**
+ * @file obstacle.c
+ * 
+ * @copyright Copyright (C) 2025 - All Rights Reserved 
+ *  You may use, distribute and modify this code under the 
+ *  terms of the GPL license.
+ */
+
 #include "dinorunner.h"
 
 static const struct obstacle_config_s kCactusSmallConfig = {
@@ -33,7 +41,7 @@ static const struct obstacle_config_s kPterodactylConfig = {
     .type_config        = OBSTACLE_TYPE_PTERODACTYL,
     .width              = 46,
     .height             = 40,
-    .y_pos              = 50 + 10,
+    .y_pos              = 50,
     .multiple_speed     = 999,
     .min_gap            = 150,
     .min_speed          = 7.0f,
@@ -122,7 +130,7 @@ float dinorunner_obstacle_getMinSpeed(enum obstacle_type_e obstacle_type) {
   return config->min_speed;
 }
 
-void obstacle_draw(const struct obstacle_s* obstacle) {
+static void obstacle_draw(const struct obstacle_s* obstacle, void* user_data) {
   enum dinorunner_sprite_e sprite;
   switch (obstacle->config.type_config) {
     case OBSTACLE_TYPE_CACTUS_SMALL:
@@ -135,12 +143,12 @@ void obstacle_draw(const struct obstacle_s* obstacle) {
       sprite = obstacle->current_frame == 0 ? DINORUNNER_SPRITE_PTERODACTYL2 : DINORUNNER_SPRITE_PTERODACTYL1;
       break;
     default:
-      dinorunner_log("Invalid obstacle type: %d\n", obstacle->config.type_config);
+      dinorunner_log(user_data, "Invalid obstacle type: %d\n", obstacle->config.type_config);
       return;
   }
   sprite                 = sprite + (obstacle->size - 1);
   const struct pos_s pos = {.x = obstacle->x_pos, .y = obstacle->y_pos};
-  dinorunner_draw(sprite, &pos, obstacle->user_data);
+  dinorunner_draw(sprite, &pos, user_data);
 }
 
 void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e obstacle_type,
@@ -152,25 +160,22 @@ void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e 
   obstacle->gap           = 0;
   obstacle->current_frame = 0;
   obstacle->timer         = 0;
-  obstacle->remove        = 0u;
+  obstacle->is_alive      = 1u;
+  // obstacle->remove        = 0u;
   dinorunner_obstacle_setconfig(obstacle, obstacle_type);
   if (obstacle->config.type_config != OBSTACLE_TYPE_PTERODACTYL) {
     obstacle->size = dinorunner_getrandomnumb(1, DINORUNNER_CONFIG_MAX_OBSTACLE_LENGTH);
   } else {
     obstacle->size = 1;
   }
-  obstacle->dimension.width            = dimension->width;
-  obstacle->dimension.height           = dimension->height;
-  obstacle->width                      = obstacle->config.width;
-  obstacle->remove                     = 0u;
+  obstacle->width = obstacle->config.width;
+  // obstacle->remove                     = 0u;
   obstacle->y_pos                      = 0u;
-  obstacle->x_pos                      = obstacle->dimension.width + opt_x_offset;
+  obstacle->x_pos                      = dimension->width + opt_x_offset;
   obstacle->gap                        = 0u;
   obstacle->timer                      = 0u;
-  obstacle->user_data                  = user_data;
   obstacle->following_obstacle_created = 0u;
-  // obstacle->gap_coefficient            = gap_coefficient;
-  obstacle->gap_coefficient = DINORUNNER_CONFIG_MAX_GAP_COEFFICIENT;
+  obstacle->gap_coefficient            = DINORUNNER_CONFIG_MAX_GAP_COEFFICIENT;
   if (obstacle->size > 1 && (obstacle->config.multiple_speed > speed)) {
     obstacle->size = 1;
   }
@@ -179,7 +184,7 @@ void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e 
   if (obstacle->config.type_config == OBSTACLE_TYPE_PTERODACTYL) {
     obstacle->y_pos += dinorunner_getrandomnumb(0, 2) * 25;
   }
-  obstacle_draw(obstacle);
+  obstacle_draw(obstacle, user_data);
   if (obstacle->size > 1) {
     obstacle->config.collision_box[1].width =
         obstacle->width - obstacle->config.collision_box[0].width - obstacle->config.collision_box[2].width;
@@ -191,8 +196,9 @@ void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e 
   obstacle->gap = obstacle_getgap(obstacle, obstacle->gap_coefficient, speed);
 }
 
-void dinorunner_obstacle_update(struct obstacle_s* obstacle, float delta_time, float speed) {
-  if (!obstacle->remove) {
+void dinorunner_obstacle_update(struct obstacle_s* obstacle, float delta_time, float speed, void* user_data) {
+  // if (!obstacle->remove) {
+  if (obstacle->is_alive) {
     if (obstacle->config.speed_offset) {
       speed += obstacle->speed_offset;
     }
@@ -205,9 +211,10 @@ void dinorunner_obstacle_update(struct obstacle_s* obstacle, float delta_time, f
         obstacle->timer = 0;
       }
     }
-    obstacle_draw(obstacle);
+    obstacle_draw(obstacle, user_data);
     if (!obstacle_isvisible(obstacle)) {
-      obstacle->remove = 1u;
+      // obstacle->remove = 1u;
+      obstacle->is_alive = 0u;
     }
   }
 }
