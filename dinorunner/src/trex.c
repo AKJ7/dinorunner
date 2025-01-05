@@ -176,8 +176,8 @@ unsigned char dinorunner_trex_draw(struct trex_s* trex, enum dinorunner_sprite_e
   return result;
 }
 
-unsigned char dinorunner_trex_init(struct trex_s* trex, const struct pos_s* sprite_pos, unsigned container_width,
-                                   unsigned container_height, void* user_data) {
+unsigned char dinorunner_trex_init(struct trex_s* trex, unsigned container_width, unsigned container_height,
+                                   void* user_data) {
   trex->x_pos                = 0;
   trex->ground_y_pos         = 0;
   trex->current_frame        = 0;
@@ -193,13 +193,13 @@ unsigned char dinorunner_trex_init(struct trex_s* trex, const struct pos_s* spri
   trex->speed_drop           = 0;
   trex->jump_count           = 0;
   trex->jump_spot_x          = 0;
-  trex->sprite_pos.x         = sprite_pos->x;
-  trex->sprite_pos.y         = sprite_pos->y;
-  trex->ground_y_pos         = container_height - DINORUNNER_CONFIG_TREX_HEIGHT - DINORUNNER_CONFIG_TREX_BOTTOM_PAD;
-  trex->y_pos                = trex->ground_y_pos;
-  trex->min_jump_height      = trex->ground_y_pos - DINORUNNER_CONFIG_TREX_MIN_JUMP_HEIGHT;
-  trex->jump_velocity        = -9;
-  trex->playing_intro        = 0u;
+  // trex->sprite_pos.x         = sprite_pos->x;
+  // trex->sprite_pos.y         = sprite_pos->y;
+  trex->ground_y_pos    = container_height - DINORUNNER_CONFIG_TREX_HEIGHT - DINORUNNER_CONFIG_TREX_BOTTOM_PAD;
+  trex->y_pos           = trex->ground_y_pos;
+  trex->min_jump_height = trex->ground_y_pos - DINORUNNER_CONFIG_TREX_MIN_JUMP_HEIGHT;
+  trex->jump_velocity   = -9;
+  trex->playing_intro   = 0u;
   (void)container_width;
   dinorunner_trex_draw(trex, DINORUNNER_SPRITE_TREX_STANDING1, user_data);
   dinorunner_trex_update(trex, 0, TREX_STATUS_WAITING, user_data);

@@ -1,12 +1,18 @@
-#include "dinorunner.h"
+/**
+ * @file horizon.c
+ * 
+ * @copyright Copyright (C) 2025 - All Rights Reserved 
+ *  You may use, distribute and modify this code under the 
+ *  terms of the GPL license.
+ */
 
-extern struct pos_s cloud_sprite;
+#include "dinorunner.h"
 
 static void add_cloud(struct horizon_s* horizon, const struct dimension_s* dimension) {
   for (unsigned i = 0; i < DINORUNNER_CONFIG_CLOUD_MAX_COUNT; ++i) {
     if (!horizon->clouds[i].is_alive) {
       horizon->clouds[i].is_alive = 1;
-      dinorunner_cloud_init(&horizon->clouds[i], &cloud_sprite, dimension->width);
+      dinorunner_cloud_init(&horizon->clouds[i], dimension->width);
       return;
     }
   }
@@ -42,19 +48,16 @@ static unsigned char duplicate_obstacle_check(const struct horizon_s* horizon,
   return duplicate_count >= DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_DUPLICATION;
 }
 
-unsigned char dinorunner_horizon_init(struct horizon_s* horizon, const struct pos_s* sprite_position,
-                                      const struct dimension_s* dimension, float gap_coefficient) {
-  horizon->cloud_speed      = DINORUNNER_CONFIG_CLOUD_SPEED;
-  horizon->cloud_frequency  = DINORUNNER_CONFIG_CLOUD_FREQUENCY;
-  horizon->config.max_cloud = DINORUNNER_CONFIG_CLOUD_MAX_COUNT;
-  horizon->first            = 1u;
-  horizon->dimension        = *dimension;
-  horizon->gap_coefficient  = gap_coefficient;
+unsigned char dinorunner_horizon_init(struct horizon_s* horizon, const struct dimension_s* dimension,
+                                      float gap_coefficient) {
+  horizon->cloud_speed     = DINORUNNER_CONFIG_CLOUD_SPEED;
+  horizon->first           = 1u;
+  horizon->dimension       = *dimension;
+  horizon->gap_coefficient = gap_coefficient;
   dinorunner_horizonline_init(&horizon->horizon_line, dimension);
-  dinorunner_nightmode_init(&horizon->nightmode, sprite_position, horizon->dimension.width);
+  dinorunner_nightmode_init(&horizon->nightmode, horizon->dimension.width);
   for (unsigned i = 0; i < DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_COUNT; ++i) {
     horizon->obstacle_history[i]   = OBSTACLE_TYPE_NONE;
-    horizon->obstacles[i].remove   = 0u;
     horizon->obstacles[i].is_alive = 0u;
   }
   for (unsigned i = 0; i < DINORUNNER_CONFIG_CLOUD_MAX_COUNT; ++i) {
@@ -83,8 +86,8 @@ unsigned char update_clouds(struct horizon_s* horizon, float delta_time, float c
       ++clouds_count;
     }
   }
-  if ((clouds_count < horizon->config.max_cloud) && ((horizon->dimension.width - last_pos) > last_gap) &&
-      (horizon->cloud_frequency > dinorunner_srand())) {
+  if ((clouds_count < DINORUNNER_CONFIG_CLOUD_MAX_COUNT) && ((horizon->dimension.width - last_pos) > last_gap) &&
+      (DINORUNNER_CONFIG_CLOUD_FREQUENCY > dinorunner_srand())) {
     add_cloud(horizon, &horizon->dimension);
     ++clouds_count;
   }
@@ -126,9 +129,6 @@ unsigned char update_obstacles(struct horizon_s* horizon, float delta_time, floa
     struct obstacle_s* obstacle = &horizon->obstacles[i];
     if (obstacle->is_alive) {
       dinorunner_obstacle_update(obstacle, delta_time, current_speed, user_data);
-      if (obstacle->remove) {
-        obstacle->is_alive = 0u;
-      }
     }
   }
   unsigned active_obstacle_count = get_active_obstacles(horizon);
@@ -161,7 +161,7 @@ unsigned char dinorunner_horizon_update(struct horizon_s* horizon, float delta_t
                                         void* user_data) {
   horizon->running_time += delta_time;
   dinorunner_horizonline_update(&horizon->horizon_line, delta_time, current_speed, user_data);
-  dinorunner_nightmode_update(&horizon->nightmode, show_night_mode, user_data);
+  dinorunner_nightmode_update(&horizon->nightmode, show_night_mode, horizon->dimension.width, user_data);
   update_clouds(horizon, delta_time, current_speed, user_data);
   if (update_obstacles_request) {
     update_obstacles(horizon, delta_time, current_speed, user_data);
@@ -174,5 +174,5 @@ void dinorunner_horizon_reset(struct horizon_s* horizon, void* user_data) {
     horizon->obstacles[i].is_alive = 0;
   }
   dinorunner_horizonline_reset(&horizon->horizon_line);
-  dinorunner_nightmode_reset(&horizon->nightmode, user_data);
+  dinorunner_nightmode_reset(&horizon->nightmode, horizon->dimension.width, user_data);
 }

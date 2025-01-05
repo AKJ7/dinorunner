@@ -1,14 +1,15 @@
 #include "dinorunner.h"
 
-unsigned char dinorunner_gameoverpanel_init(struct gameoverpanel_s* gameoverpanel, const struct pos_s* text_image_pos,
-                                            const struct pos_s* restart_image_pos,
+unsigned char dinorunner_gameoverpanel_init(struct gameoverpanel_s* gameoverpanel,
                                             const struct dimension_s* dimension) {
   gameoverpanel->canvas_dimension.width  = dimension->width;
   gameoverpanel->canvas_dimension.height = dimension->height;
-  gameoverpanel->restart_image_pos.x     = restart_image_pos->x;
-  gameoverpanel->restart_image_pos.y     = restart_image_pos->y;
-  gameoverpanel->text_image_pos_.x       = text_image_pos->x;
-  gameoverpanel->text_image_pos_.y       = text_image_pos->y;
+
+  // TODO:
+  gameoverpanel->restart_image_pos.x = 0;
+  gameoverpanel->restart_image_pos.y = 0;
+  gameoverpanel->text_image_pos_.x   = 0;
+  gameoverpanel->text_image_pos_.y   = 0;
   return 1u;
 }
 

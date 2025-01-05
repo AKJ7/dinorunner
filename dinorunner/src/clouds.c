@@ -4,9 +4,7 @@ static inline unsigned char dinorunner_cloud_isvisible(const struct cloud_s* clo
   return cloud->x + DINORUNNER_CONFIG_CLOUD_WIDTH > 0;
 }
 
-void dinorunner_cloud_init(struct cloud_s* cloud, const struct pos_s* sprite_pos, unsigned container_width) {
-  cloud->sprite_pos.x    = sprite_pos->x;
-  cloud->sprite_pos.y    = sprite_pos->y;
+void dinorunner_cloud_init(struct cloud_s* cloud, unsigned container_width) {
   cloud->container_width = container_width;
   cloud->x               = container_width;
   cloud->remove          = 0;

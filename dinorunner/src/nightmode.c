@@ -8,9 +8,9 @@
 
 #include "dinorunner.h"
 
-static float dinorunner_nightmode_updateXPos(struct nightmode_s* nightmode, float current_pos, float speed) {
+static float dinorunner_nightmode_updateXPos(float current_pos, float speed, unsigned container_width) {
   if (current_pos < -DINORUNNER_CONFIG_NIGHTMODE_WIDTH) {
-    current_pos = nightmode->container_width;
+    current_pos = container_width;
   } else {
     current_pos -= speed;
   }
@@ -31,9 +31,8 @@ static unsigned char dinorunner_nightmode_draw(const struct nightmode_s* nightmo
   return 1u;
 }
 
-static void dinorunner_nightmode_placestars(struct nightmode_s* nightmode) {
-  const unsigned kSegmentSize =
-      dinorunner_roundf((float)nightmode->container_width / DINORUNNER_CONFIG_NIGHTMODE_NUMBSTARS);
+static void dinorunner_nightmode_placestars(struct nightmode_s* nightmode, unsigned container_width) {
+  const unsigned kSegmentSize = dinorunner_roundf((float)container_width / DINORUNNER_CONFIG_NIGHTMODE_NUMBSTARS);
   for (unsigned i = 0; i < DINORUNNER_CONFIG_NIGHTMODE_NUMBSTARS; ++i) {
     struct star_s* star = &nightmode->stars[i];
     star->x             = dinorunner_getrandomnumb(kSegmentSize * i, kSegmentSize * (i + 1));
@@ -41,20 +40,20 @@ static void dinorunner_nightmode_placestars(struct nightmode_s* nightmode) {
   }
 }
 
-void dinorunner_nightmode_init(struct nightmode_s* nightmode, const struct pos_s* pos, unsigned container_width) {
-  nightmode->x_pos           = container_width - 50;
-  nightmode->y_pos           = 30;
-  nightmode->current_phase   = 0u;
-  nightmode->opacity         = 0;
-  nightmode->container_width = container_width;
-  nightmode->draw_stars      = 0;
-  nightmode->sprite_pos.x    = pos->x;
-  nightmode->sprite_pos.y    = pos->y;
-  dinorunner_nightmode_placestars(nightmode);
+void dinorunner_nightmode_init(struct nightmode_s* nightmode, unsigned container_width) {
+  nightmode->x_pos         = container_width - 50;
+  nightmode->y_pos         = 30;
+  nightmode->current_phase = 0u;
+  nightmode->opacity       = 0;
+  // nightmode->container_width = container_width;
+  nightmode->draw_stars = 0;
+  // nightmode->sprite_pos.x    = pos->x;
+  // nightmode->sprite_pos.y    = pos->y;
+  dinorunner_nightmode_placestars(nightmode, container_width);
 }
 
 unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigned char show_nightmode,
-                                          void* user_data) {
+                                          unsigned container_width, void* user_data) {
   if (show_nightmode && nightmode->opacity == 0) {
     nightmode->current_phase++;
     if (nightmode->current_phase >= DINORUNNER_CONFIG_NIGHTMODE_MOONPHASES) {
@@ -70,24 +69,24 @@ unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigne
   }
   if (nightmode->opacity > 0) {
     nightmode->x_pos =
-        dinorunner_nightmode_updateXPos(nightmode, nightmode->x_pos, DINORUNNER_CONFIG_NIGHTMODE_MOONSPEED);
+        dinorunner_nightmode_updateXPos(nightmode->x_pos, DINORUNNER_CONFIG_NIGHTMODE_MOONSPEED, container_width);
     if (nightmode->draw_stars) {
       for (unsigned i = 0; i < DINORUNNER_CONFIG_NIGHTMODE_NUMBSTARS; ++i) {
-        nightmode->stars[i].x = dinorunner_nightmode_updateXPos(nightmode, nightmode->stars[i].x,
-                                                                (float)DINORUNNER_CONFIG_NIGHTMODE_STARSPEED);
+        nightmode->stars[i].x = dinorunner_nightmode_updateXPos(
+            nightmode->stars[i].x, (float)DINORUNNER_CONFIG_NIGHTMODE_STARSPEED, container_width);
       }
     }
     dinorunner_nightmode_draw(nightmode, user_data);
   } else {
     nightmode->opacity = 0;
-    dinorunner_nightmode_placestars(nightmode);
+    dinorunner_nightmode_placestars(nightmode, container_width);
   }
   nightmode->draw_stars = 1u;
   return 1u;
 }
 
-void dinorunner_nightmode_reset(struct nightmode_s* nightmode, void* user_data) {
+void dinorunner_nightmode_reset(struct nightmode_s* nightmode, unsigned container_width, void* user_data) {
   nightmode->current_phase = 0;
   nightmode->opacity       = 0;
-  dinorunner_nightmode_update(nightmode, 0, user_data);
+  dinorunner_nightmode_update(nightmode, 0, container_width, user_data);
 }
