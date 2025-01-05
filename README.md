@@ -14,8 +14,10 @@ It is designed to be used as a configurable backend library accessable to a wide
 - No `stdlib` or header lib requirement
 - No heap allocations
 - No `typedef`s
+- Supports nightmode
 
-The dinorunner was inspired by https://github.com/wayou/t-rex-runner from which the trex-assets were fetched.
+The dinorunner was inspired by https://github.com/wayou/t-rex-runner from which the trex-assets were fetched.  
+The sound assets used in the demo originates from: https://www.sounds-resource.com/browser_games/googlechromedinosaurgame/sound/18002/ .
 
 
 ## Requirements  
@@ -23,12 +25,12 @@ The following functions need to be defined:
 ```c
 unsigned char dinorunner_writehighscore(unsigned long high_score, void* user_data);
 unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_data);
-unsigned long dinorunner_gettimestamp(void);
-unsigned char dinorunner_sound_play(enum dinorunner_sound_e sound);
+unsigned long dinorunner_gettimestamp(void* user_data);
+unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_data);
 unsigned char dinorunner_vibrate(unsigned duration, void* user_data);
 unsigned char dinorunner_canvas_clear(void* user_data);
 unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, void* user_data);
-unsigned char dinorunner_log(const char* format, ...);
+unsigned char dinorunner_log(void* user_data, const char* format, ...);
 ```
 
 ## Demo  
@@ -53,8 +55,22 @@ sudo apt -y install libsdl2-dev libsdl2-image-dev libsdl2-gfx-dev
 The lib can be installed system-wide using the `sudo make install` command after generating 
 the Makefiles using CMake.
 
+## API  
+The following functions can be used to interact with the dinorunner engine. See the demo for example.
+
+```c
+unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dimension_s* dimension, void* user_data);
+unsigned char dinorunner_update(struct dinorunner_s* dinorunner);
+unsigned char dinorunner_getversion(struct version_s* version);
+unsigned char dinorunner_opacity(struct dinorunner_s* dinorunner, unsigned char* opacity);
+unsigned char dinorunner_isinverted(struct dinorunner_s* dinorunner, unsigned char* night_mode);
+void dinorunner_onkeyup(struct dinorunner_s* dinorunner);
+void dinorunner_onkeydown(struct dinorunner_s* dinorunner);
+void dinorunner_onkeynone(struct dinorunner_s* dinorunner);
+```
+
 ## TODO  
-- [ ] Add sound and vibration support
-- [ ] Improve configurability
+- [x] Add sound and vibration support (~~vibration support~~)
+- [x] Improve configurability
 - [x] Add night mode
-- [ ] Add Python/Pygame demo
+- [ ] ~~Add Python/Pygame demo~~ (No time! Implementation trivial.)
