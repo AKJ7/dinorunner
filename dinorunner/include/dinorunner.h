@@ -227,7 +227,6 @@ struct obstacle_s {
   struct dimension_s dimension;
   float gap;
   float gap_coefficient;
-  void* user_data;
 };
 
 /**
@@ -264,7 +263,6 @@ struct horizonline_s {
   int x_pos[2];
   enum dinorunner_sprite_e sprite[2];
   float bump_threshold;
-  void* user_data;
 };
 
 /**
@@ -311,7 +309,6 @@ struct distance_meter_s {
   unsigned short invert_timer;
   unsigned long max_score_units;
   unsigned int width;
-  void* user_data;
 };
 
 /**
@@ -351,7 +348,6 @@ struct trex_s {
   int initial_jump_velocity;
   float drop_velocity;
   int min_jump_height;
-  void* user_data;
 };
 
 /**
@@ -382,6 +378,7 @@ struct dinorunner_s {
   int collision_count;
   int score_read;
   unsigned char inverted;
+  void* user_data;
 };
 
 /**
@@ -505,7 +502,7 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
  * @return unsigned long Amount of milliseconds that have passed since the game started
  * @interface
  */
-unsigned long dinorunner_gettimestamp(void);
+unsigned long dinorunner_gettimestamp(void* user_data);
 
 /**
  * @brief Game's request to play a specific sound 
@@ -623,19 +620,20 @@ unsigned char dinorunner_cloud_update(struct cloud_s* cloud, float speed, void* 
 unsigned char dinorunner_horizon_init(struct horizon_s* horizon, const struct pos_s* sprite_position,
                                       const struct dimension_s* dimension, float gap_coefficient);
 unsigned char dinorunner_horizon_update(struct horizon_s* horizon, float delta_time, float current_speed,
-                                        unsigned char update_obstacles_request, unsigned char show_night_mode);
-void dinorunner_horizon_reset(struct horizon_s* horizon);
+                                        unsigned char update_obstacles_request, unsigned char show_night_mode,
+                                        void* user_data);
+void dinorunner_horizon_reset(struct horizon_s* horizon, void* user_data);
 
 void dinorunner_horizonline_init(struct horizonline_s* horizoneline, const struct dimension_s* src_dimension);
 void dinorunner_horizonline_reset(struct horizonline_s* horizonline);
-void dinorunner_horizonline_update(struct horizonline_s* horizonline, float delta_time, float speed);
+void dinorunner_horizonline_update(struct horizonline_s* horizonline, float delta_time, float speed, void* user_data);
 
 float dinorunner_obstacle_getMinSpeed(enum obstacle_type_e obstacle_type_e);
 enum obstacle_type_e dinorunner_obstacle_fromIndex(int obstacle_index);
 void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e obstacle_type,
                               const struct dimension_s* dimension, float gap_coefficient, float speed, int opt_x_offset,
                               void* user_data);
-void dinorunner_obstacle_update(struct obstacle_s* obstacle, float delta_time, float speed);
+void dinorunner_obstacle_update(struct obstacle_s* obstacle, float delta_time, float speed, void* user_data);
 
 unsigned char dinorunner_gameoverpanel_init(struct gameoverpanel_s* gameoverpanel, const struct pos_s* text_image_pos,
                                             const struct pos_s* restart_image_pos, const struct dimension_s* dimension);
@@ -647,7 +645,8 @@ unsigned char dinorunner_distancemeter_init(struct distance_meter_s* distance_me
 unsigned char dinorunner_distancemeter_draw(const struct distance_meter_s* distance_meter, unsigned digit_pos,
                                             unsigned value, unsigned short opt_high, void* user_data);
 void dinorunner_distancemeter_reset(struct distance_meter_s* distance_meter, unsigned long score, void* user_data);
-void dinorunner_distancemeter_writehighscore(struct distance_meter_s* distance_meter, unsigned distance);
+void dinorunner_distancemeter_writehighscore(struct distance_meter_s* distance_meter, unsigned distance,
+                                             void* user_data);
 unsigned dinorunner_distancemeter_getactualdistance(unsigned distance);
 unsigned char dinorunner_distancemeter_update(struct distance_meter_s* distance_meter, float delta_time,
                                               unsigned long distance, void* user_data);
@@ -657,13 +656,14 @@ void dinorunner_nightmode_reset(struct nightmode_s* nightmode, void* user_data);
 unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigned char show_nightmode, void* user_data);
 
 unsigned char dinorunner_trex_init(struct trex_s* trex, const struct pos_s* sprite_pos, unsigned container_width,
-                                   unsigned container_height);
-unsigned char dinorunner_trex_update(struct trex_s* trex, unsigned long delta_time, enum trex_status_e status);
-void dinorunner_trex_reset(struct trex_s* trex);
-void dinorunner_trex_setduck(struct trex_s* trex, unsigned char is_ducking);
-void dinorunner_trex_startjump(struct trex_s* trex, float speed);
+                                   unsigned container_height, void* user_data);
+unsigned char dinorunner_trex_update(struct trex_s* trex, unsigned long delta_time, enum trex_status_e status,
+                                     void* user_data);
+void dinorunner_trex_reset(struct trex_s* trex, void* user_data);
+void dinorunner_trex_setduck(struct trex_s* trex, unsigned char is_ducking, void* user_data);
+void dinorunner_trex_startjump(struct trex_s* trex, float speed, void* user_data);
 void dinorunner_trex_setspeeddrop(struct trex_s* trex);
-void dinorunner_trex_updatejump(struct trex_s* trex, float delta_time);
+void dinorunner_trex_updatejump(struct trex_s* trex, float delta_time, void* user_data);
 void dinorunner_trex_endjump(struct trex_s* trex);
 /**
  * @} 

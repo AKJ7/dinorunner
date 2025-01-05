@@ -4,17 +4,18 @@ unsigned dinorunner_distancemeter_getactualdistance(unsigned distance) {
   return distance ? dinorunner_roundf(distance * DINORUNNER_CONFIG_DISTANCEMETER_COEFFICIENT) : 0;
 }
 
-static unsigned long distancemeter_readhighscore(struct distance_meter_s* distance_meter) {
+static unsigned long distancemeter_readhighscore(void* user_data) {
   unsigned long high_score  = 0;
-  unsigned char read_result = dinorunner_readhighscore(&high_score, distance_meter->user_data);
+  unsigned char read_result = dinorunner_readhighscore(&high_score, user_data);
   if (read_result != 0) {
     return high_score;
   }
   return 0u;
 }
 
-void dinorunner_distancemeter_writehighscore(struct distance_meter_s* distance_meter, unsigned distance) {
-  unsigned char read_result = dinorunner_writehighscore(distance, distance_meter->user_data);
+void dinorunner_distancemeter_writehighscore(struct distance_meter_s* distance_meter, unsigned distance,
+                                             void* user_data) {
+  unsigned char read_result = dinorunner_writehighscore(distance, user_data);
   if (read_result != 0) {
     if (distance_meter->high_score < distance) {
       distance_meter->high_score = distance;
@@ -88,7 +89,7 @@ unsigned char dinorunner_distancemeter_init(struct distance_meter_s* distance_me
   distance_meter->y                = 5;
   distance_meter->width            = sprite_info->width;
   dinorunner_distancemeter_calcxpos(distance_meter, canvas_width);
-  unsigned long high_score   = distancemeter_readhighscore(distance_meter);
+  unsigned long high_score   = distancemeter_readhighscore(user_data);
   distance_meter->high_score = high_score;
   dinorunner_distancemeter_draw(distance_meter, 0, 0u, 1u, user_data);
   return 1u;

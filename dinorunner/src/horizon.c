@@ -67,7 +67,7 @@ unsigned char dinorunner_horizon_init(struct horizon_s* horizon, const struct po
   return 1u;
 }
 
-unsigned char update_clouds(struct horizon_s* horizon, float delta_time, float current_speed) {
+unsigned char update_clouds(struct horizon_s* horizon, float delta_time, float current_speed, void* user_data) {
   float cloud_speed     = (horizon->cloud_speed / 1000.0f) * delta_time * current_speed;
   int last_pos          = 0;
   float last_gap        = 0;
@@ -75,7 +75,7 @@ unsigned char update_clouds(struct horizon_s* horizon, float delta_time, float c
   for (unsigned counter = 0u; counter < DINORUNNER_CONFIG_CLOUD_MAX_COUNT; ++counter) {
     struct cloud_s* cloud = &horizon->clouds[counter];
     if (cloud->is_alive && !cloud->remove) {
-      dinorunner_cloud_update(cloud, cloud_speed, horizon->horizon_line.user_data);
+      dinorunner_cloud_update(cloud, cloud_speed, user_data);
       if (last_pos < cloud->x) {
         last_pos = cloud->x;
         last_gap = cloud->cloud_gap;
@@ -102,18 +102,18 @@ unsigned char update_clouds(struct horizon_s* horizon, float delta_time, float c
   return 1u;
 }
 
-void add_new_obstacle(struct horizon_s* horizon, float current_speed) {
+static void add_new_obstacle(struct horizon_s* horizon, float current_speed, void* user_data) {
   int obstacle_index                 = dinorunner_getrandomnumb(0, 2);
   enum obstacle_type_e obstacle_type = dinorunner_obstacle_fromIndex(obstacle_index);
   if (duplicate_obstacle_check(horizon, obstacle_type) ||
       (current_speed < dinorunner_obstacle_getMinSpeed(obstacle_type))) {
-    add_new_obstacle(horizon, current_speed);
+    add_new_obstacle(horizon, current_speed, user_data);
   } else {
     for (unsigned i = 0u; i < DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_COUNT; ++i) {
       struct obstacle_s* obstacle = &horizon->obstacles[i];
       if (!obstacle->is_alive) {
         dinorunner_obstacle_init(obstacle, obstacle_type, &horizon->dimension, horizon->gap_coefficient, current_speed,
-                                 0, horizon->horizon_line.user_data);
+                                 0, user_data);
         obstacle->is_alive = 1u;
         return;
       }
@@ -121,11 +121,11 @@ void add_new_obstacle(struct horizon_s* horizon, float current_speed) {
   }
 }
 
-unsigned char update_obstacles(struct horizon_s* horizon, float delta_time, float current_speed) {
+unsigned char update_obstacles(struct horizon_s* horizon, float delta_time, float current_speed, void* user_data) {
   for (unsigned i = 0u; i < DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_COUNT; ++i) {
     struct obstacle_s* obstacle = &horizon->obstacles[i];
     if (obstacle->is_alive) {
-      dinorunner_obstacle_update(obstacle, delta_time, current_speed);
+      dinorunner_obstacle_update(obstacle, delta_time, current_speed, user_data);
       if (obstacle->remove) {
         obstacle->is_alive = 0u;
       }
@@ -147,31 +147,32 @@ unsigned char update_obstacles(struct horizon_s* horizon, float delta_time, floa
     struct obstacle_s* last_obstacle = &horizon->obstacles[last_index];
     if (!last_obstacle->following_obstacle_created && dinorunner_obstacle_isvisible(last_obstacle) &&
         (last_obstacle->x_pos + last_obstacle->width + last_obstacle->gap) < horizon->dimension.width) {
-      add_new_obstacle(horizon, current_speed);
+      add_new_obstacle(horizon, current_speed, user_data);
       last_obstacle->following_obstacle_created = 1;
     }
   } else {
-    add_new_obstacle(horizon, current_speed);
+    add_new_obstacle(horizon, current_speed, user_data);
   }
   return 1u;
 }
 
 unsigned char dinorunner_horizon_update(struct horizon_s* horizon, float delta_time, float current_speed,
-                                        unsigned char update_obstacles_request, unsigned char show_night_mode) {
+                                        unsigned char update_obstacles_request, unsigned char show_night_mode,
+                                        void* user_data) {
   horizon->running_time += delta_time;
-  dinorunner_horizonline_update(&horizon->horizon_line, delta_time, current_speed);
-  dinorunner_nightmode_update(&horizon->nightmode, show_night_mode, horizon->horizon_line.user_data);
-  update_clouds(horizon, delta_time, current_speed);
+  dinorunner_horizonline_update(&horizon->horizon_line, delta_time, current_speed, user_data);
+  dinorunner_nightmode_update(&horizon->nightmode, show_night_mode, user_data);
+  update_clouds(horizon, delta_time, current_speed, user_data);
   if (update_obstacles_request) {
-    update_obstacles(horizon, delta_time, current_speed);
+    update_obstacles(horizon, delta_time, current_speed, user_data);
   }
   return 1u;
 }
 
-void dinorunner_horizon_reset(struct horizon_s* horizon) {
+void dinorunner_horizon_reset(struct horizon_s* horizon, void* user_data) {
   for (unsigned i = 0u; i < DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_COUNT; ++i) {
     horizon->obstacles[i].is_alive = 0;
   }
   dinorunner_horizonline_reset(&horizon->horizon_line);
-  dinorunner_nightmode_reset(&horizon->nightmode, horizon->horizon_line.user_data);
+  dinorunner_nightmode_reset(&horizon->nightmode, user_data);
 }

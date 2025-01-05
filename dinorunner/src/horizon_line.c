@@ -28,7 +28,7 @@ void dinorunner_horizonline_updatexpos(struct horizonline_s* horizon_line, int p
   }
 }
 
-void dinorunner_horizonline_update(struct horizonline_s* horizonline, float delta_time, float speed) {
+void dinorunner_horizonline_update(struct horizonline_s* horizonline, float delta_time, float speed, void* user_data) {
   int increment = dinorunner_floorf(speed * (DINORUNNER_CONFIG_CORE_FPS / 1000.0f) * delta_time);
   if (horizonline->x_pos[0] <= 0) {
     dinorunner_horizonline_updatexpos(horizonline, 0, increment);
@@ -37,8 +37,8 @@ void dinorunner_horizonline_update(struct horizonline_s* horizonline, float delt
   }
   const struct pos_s pos1 = {.x = horizonline->x_pos[0], horizonline->y_pos};
   const struct pos_s pos2 = {.x = horizonline->x_pos[1], horizonline->y_pos};
-  dinorunner_draw(horizonline->sprite[0], &pos1, horizonline->user_data);
-  dinorunner_draw(horizonline->sprite[1], &pos2, horizonline->user_data);
+  dinorunner_draw(horizonline->sprite[0], &pos1, user_data);
+  dinorunner_draw(horizonline->sprite[1], &pos2, user_data);
 }
 
 void dinorunner_horizonline_init(struct horizonline_s* horizoneline, const struct dimension_s* src_dimension) {
