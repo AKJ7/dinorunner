@@ -34,7 +34,7 @@ extern "C" {
 #define DINORUNNER_CONFIG_CLOUD_SPEED 0.2f
 #define DINORUNNER_CONFIG_CLOUD_FREQUENCY 0.5f
 
-#define DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_COUNT 10
+#define DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_COUNT 4
 #define DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_DUPLICATION 2
 
 #define DINORUNNER_CONFIG_GAMEOVERPANEL_TEXT_X 0
@@ -53,7 +53,7 @@ extern "C" {
 #define DINORUNNER_CONFIG_MAX_OBSTACLE_LENGTH 3
 #define DINORUNNER_CONFIG_MAX_GAP_COEFFICIENT 1.5f
 
-#define DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT 0.5f
+#define DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT 0.6f
 
 #define DINORUNNER_CONFIG_TREX_DROP_VELOCIY -5.0f
 #define DINORUNNER_CONFIG_TREX_GRAVITY 0.6f
@@ -296,8 +296,6 @@ struct distance_meter_s {
  * @brief Structure representing the gameover sprite
  */
 struct gameoverpanel_s {
-  struct pos_s text_image_pos_;
-  struct pos_s restart_image_pos;
   struct dimension_s canvas_dimension;
 };
 

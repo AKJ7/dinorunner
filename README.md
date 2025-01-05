@@ -15,6 +15,7 @@ It is designed to be used as a configurable backend library accessable to a wide
 - No heap allocations
 - No `typedef`s
 - Supports nightmode
+- Only requires 1400 bytes to store data structure
 
 The dinorunner was inspired by https://github.com/wayou/t-rex-runner from which the trex-assets were fetched.  
 The sound assets used in the demo originates from: https://www.sounds-resource.com/browser_games/googlechromedinosaurgame/sound/18002/ .
