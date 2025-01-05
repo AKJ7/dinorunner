@@ -1,6 +1,12 @@
-#include "dinorunner.h"
+/**
+ * @file trex.c
+ * 
+ * @copyright Copyright (C) 2025 - All Rights Reserved 
+ *  You may use, distribute and modify this code under the 
+ *  terms of the GPL license.
+ */
 
-extern const struct sprite_s dinorunner_trex_stand_sprite;
+#include "dinorunner.h"
 
 struct trex_animation_frame_s {
   const enum dinorunner_sprite_e sprite[2];
