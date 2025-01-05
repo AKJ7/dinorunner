@@ -41,13 +41,14 @@ unsigned char dinorunner_log(void* user_data, const char* format, ...);
 
 ## Usage  
 This project provides a preset docker container into which the program compiles and runs.
+Before running the examples in a docker container, the x-server needs to permit access to client outside its host. This is done using: `xhost +`.
 The simplest way to run the program is using docker-compose:
 ```shell
 docker compose -f docker-compose.yml up
 ```
 Alternaively, using CMake:
 ```shell
-cmake -DCMAKE_BUILD_TYPE=Release -S demo -B demo/build && cmake --build demo/build
+cmake -DCMAKE_BUILD_TYPE=Release -S demo -B demo/build && cmake --build demo/build && demo/bin/dinorunner_sdl
 ```
 while requiring `libsdl2-dev` `libsdl2-image-dev` `libsdl2-gfx-dev` installable with:
 ```shell
