@@ -8,6 +8,15 @@
         "sdl.h": "c"
     },
     "git.path": "/usr/bin/git",
-    "cmake.sourceDirectory": "/workspaces/dinorunner/dinorunner",
-    "editor.formatOnSave": true
+    "cmake.sourceDirectory": "/workspaces/dinorunner/demo",
+    "editor.formatOnSave": true,
+    "doxdocgen.generic.useGitUserName": true,
+    "doxdocgen.generic.useGitUserEmail": true,
+    "doxdocgen.file.copyrightTag": [
+        "@copyright Copyright (C) {year} - All Rights Reserved \n You may use, distribute and modify this code under the \n terms of the GPL license."
+    ],
+    "editor.defaultFormatter": "xaver.clang-format",
+    "[c]": {
+        "editor.defaultFormatter": "xaver.clang-format"
+    }
 }

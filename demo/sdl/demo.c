@@ -1,3 +1,10 @@
+/**
+ * @file demo.c
+ * 
+ * @copyright Copyright (C) 2025 - All Rights Reserved 
+ *  You may use, distribute and modify this code under the 
+ *  terms of the GPL license.
+ */
 #include <SDL.h>
 #include <SDL2_framerate.h>
 #include <SDL_image.h>
@@ -10,6 +17,7 @@
 #include "dinorunner.h"
 
 #define LOG(format, ...) fprintf(stderr, "[%24s(%3d)] " format "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
+#define AUDIO_FILE_COUNT 3u
 
 typedef struct dinorunner_s dinorunner_s;
 static const uint32_t kPadding                 = 20;
@@ -17,6 +25,9 @@ static const char* kWindowName                 = "dinorunner demo";
 static const struct dimension_s kGameDimension = {.width = 600, .height = 150};
 static const char* highscore_filename          = "dinorunner_highscore.txt";
 static const char* sprite_filename             = "demo/assets/100-offline-sprite.png";
+static const char* die_sound_file              = "demo/assets/die.wav";
+static const char* jump_sound_file             = "demo/assets/jump.wav";
+static const char* point_sound_file            = "demo/assets/point.wav";
 static const SDL_Rect game_rect = {.x = kPadding, .y = kPadding, .w = kGameDimension.width, .h = kGameDimension.height};
 static const SDL_Rect kCactusLargeSprite1    = {.x = 332, .y = 2, .w = 25, .h = 50};
 static const SDL_Rect kCactusLargeSprite2    = {.x = 357, .y = 2, .w = 50, .h = 50};
@@ -29,7 +40,7 @@ static const SDL_Rect kPterodactylSprite2    = {.x = 180, .y = 2, .w = 46, .h = 
 static const SDL_Rect kCloudSprite           = {.x = 86, .y = 2, .w = 46, .h = 14};
 static const SDL_Rect kHorizonSprite1        = {.x = 2, .y = 54, .w = 600, .h = 12};
 static const SDL_Rect kHorizonSprite2        = {.x = 602, .y = 54, .w = 600, .h = 12};
-static const SDL_Rect kMoonSprite            = {.x = 484, .y = 2};
+static const SDL_Rect kMoonSprite            = {.x = 484, .y = 2, .w = 20, .h = 40};
 static const SDL_Rect kRestartSprite         = {.x = 2, .y = 2, .w = 36, .h = 32};
 static const SDL_Rect kTextSprite            = {.x = 655, .y = 2, .w = 191, .h = 11};
 static const SDL_Rect kTrexSpriteStanding1   = {.x = 848, .y = 2, .w = 44, .h = 47};
@@ -40,7 +51,7 @@ static const SDL_Rect kTrexSpriteJumping     = {.x = 848, .y = 2, .w = 44, .h = 
 static const SDL_Rect kTrexSpriteCrashed     = {.x = 1068, .y = 2, .w = 44, .h = 47};
 static const SDL_Rect kTrexSpriteDucking1    = {.x = 1112, .y = 2, .w = 59, .h = 47};
 static const SDL_Rect kTrexSpriteDucking2    = {.x = 1171, .y = 2, .w = 59, .h = 47};
-static const SDL_Rect kStartSprite           = {.x = 645, .y = 2};
+static const SDL_Rect kStarSprite            = {.x = 645, .y = 2, .w = 8, .h = 9};
 static const SDL_Rect kHiSprite              = {.x = 754, .y = 2, .w = 20, .h = 13};
 static const SDL_Rect k0Sprite               = {.x = 654, .y = 2, .w = 10, .h = 13};
 static const SDL_Rect KGameoverRestartSprite = {.x = 2, .y = 2, .w = 36, .h = 32};
@@ -48,9 +59,20 @@ static const SDL_Rect KGameoverTextSprite    = {.x = 654, .y = 15, .w = 191, .h 
 static const uint32_t kWindowHeight          = kGameDimension.height + kPadding * 2;
 static const uint32_t kWindowWidth           = kGameDimension.width + kPadding * 2;
 static const uint32_t kFrameRate             = 60u;
+static const uint8_t kBackgroundColor        = 0xF2;
+static const unsigned char kNightModePhases[DINORUNNER_CONFIG_NIGHTMODE_MOONPHASES] = {140, 120, 100, 60, 40, 20, 0};
+
+typedef struct audio_s {
+  uint8_t* pos;
+  uint32_t length;
+  SDL_AudioSpec spec;
+  int audio_device_id;
+} audio_s;
 
 typedef struct hypervisor_s {
   dinorunner_s dinorunner;
+  FPSmanager fps_manager;
+  audio_s sound_effect[AUDIO_FILE_COUNT];
   FILE* highscore_store;
   SDL_Window* g_window;
   SDL_Surface* g_screen_surface;
@@ -58,7 +80,6 @@ typedef struct hypervisor_s {
   SDL_Texture* g_sprite;
   SDL_Texture* g_background;
   SDL_Surface* g_image;
-  FPSmanager fps_manager;
 } hypervisor_s;
 
 static uint8_t system_preinit(hypervisor_s* hypervisor);
@@ -93,7 +114,8 @@ static uint8_t render_background(hypervisor_s* hypervisor) {
   SDL_SetRenderTarget(hypervisor->g_renderer, hypervisor->g_background);
   int status = SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
   status     = SDL_RenderClear(hypervisor->g_renderer);
-  status     = SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xF2, 0xF2, 0xF2, SDL_ALPHA_OPAQUE);
+  status     = SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor,
+                                      SDL_ALPHA_OPAQUE);
   SDL_assert(status == 0);
   SDL_RenderFillRect(hypervisor->g_renderer, &game_rect);
   return 1u;
@@ -105,6 +127,33 @@ static uint8_t load_sprite(hypervisor_s* hypervisor) {
   SDL_assert(status == img_flags);
   hypervisor->g_sprite = IMG_LoadTexture(hypervisor->g_renderer, sprite_filename);
   SDL_assert(hypervisor->g_sprite);
+  SDL_SetTextureBlendMode(hypervisor->g_sprite, SDL_BLENDMODE_BLEND);
+  return 1u;
+}
+
+static uint8_t load_sounds(hypervisor_s* hypervisor) {
+  const char* audio_file_path[AUDIO_FILE_COUNT] = {jump_sound_file, point_sound_file, die_sound_file};
+  for (unsigned i = 0; i < AUDIO_FILE_COUNT; ++i) {
+    uint32_t wav_length    = 0;
+    uint8_t* wav_buffer    = NULL;
+    audio_s* current_audio = &hypervisor->sound_effect[i];
+    SDL_AudioSpec* result  = SDL_LoadWAV(audio_file_path[i], &current_audio->spec, &wav_buffer, &wav_length);
+    if (result == NULL) {
+      LOG("%s %s", "Error loading sound", audio_file_path[i]);
+      return 0u;
+    }
+    current_audio->spec.callback = NULL;
+    current_audio->spec.userdata = NULL;
+    current_audio->spec.channels = 2;
+    current_audio->pos           = wav_buffer;
+    current_audio->length        = wav_length;
+    current_audio->audio_device_id =
+        SDL_OpenAudioDevice(NULL, 0, &current_audio->spec, NULL, SDL_AUDIO_ALLOW_ANY_CHANGE);
+    if (current_audio->audio_device_id <= 0) {
+      LOG("%s: %s", "Could not open audio device", SDL_GetError());
+      return 0u;
+    }
+  }
   return 1u;
 }
 
@@ -125,11 +174,17 @@ static uint8_t load_scorefile(hypervisor_s* hypervisor) {
 }
 
 static uint8_t system_init(hypervisor_s* hypervisor) {
-  LOG("%s", "Starting hypervisor");
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+  struct version_s version           = {0, 0, 0};
+  const unsigned char kVersionResult = dinorunner_getversion(&version);
+  if (!kVersionResult) {
+    return 0u;
+  }
+  LOG("Compiled with libdinorunner v%hu.%hu.%hu", version.major, version.minor, version.patch);
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
     LOG("SDL could not initialize! SDL_Error: %s", SDL_GetError());
     return 0u;
   }
+  LOG("Size of dinorunner structure: %u", (unsigned)sizeof(hypervisor->dinorunner));
   hypervisor->g_window = SDL_CreateWindow(kWindowName, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, kWindowWidth,
                                           kWindowHeight, SDL_WINDOW_SHOWN);
   if (hypervisor->g_window == NULL) {
@@ -149,6 +204,8 @@ static uint8_t system_init(hypervisor_s* hypervisor) {
   SDL_RenderPresent(hypervisor->g_renderer);
   SDL_UpdateWindowSurface(hypervisor->g_window);
   SDL_assert(status == 0);
+  status = load_sounds(hypervisor);
+  SDL_assert(status == 1);
   load_scorefile(hypervisor);
   SDL_initFramerate(&hypervisor->fps_manager);
   SDL_setFramerate(&hypervisor->fps_manager, kFrameRate);
@@ -197,6 +254,13 @@ static uint8_t system_exit(hypervisor_s* hypervisor) {
     SDL_DestroyRenderer(hypervisor->g_renderer);
   }
   IMG_Quit();
+  for (unsigned i = 0; i < sizeof(hypervisor->sound_effect) / sizeof(*hypervisor->sound_effect); ++i) {
+    audio_s* sound_effect = &hypervisor->sound_effect[i];
+    SDL_CloseAudioDevice(sound_effect->audio_device_id);
+    if (sound_effect->pos != NULL) {
+      SDL_FreeWAV(sound_effect->pos);
+    }
+  }
   SDL_Quit();
   if (hypervisor->highscore_store) {
     fclose(hypervisor->highscore_store);
@@ -249,12 +313,24 @@ unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_dat
   return 1u;
 }
 
-unsigned long dinorunner_gettimestamp(void) {
+unsigned long dinorunner_gettimestamp(void* user_data) {
+  (void)user_data;
   return (unsigned long)SDL_GetTicks();
 }
 
-unsigned char dinorunner_sound_play(enum dinorunner_sound_e sound) {
-  // pass
+unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_data) {
+  hypervisor_s* hypervisor = (hypervisor_s*)user_data;
+  if (hypervisor == NULL) {
+    return 0u;
+  }
+  int sound_index = sound - DINORUNNER_SOUND_BUTTON_PRESS;
+  if (sound < 0 || sound >= AUDIO_FILE_COUNT) {
+    LOG("%s: %d", "Invalid sound play request", (int)sound);
+    return 0u;
+  }
+  int device_id = hypervisor->sound_effect[sound].audio_device_id;
+  SDL_QueueAudio(device_id, hypervisor->sound_effect[sound_index].pos, hypervisor->sound_effect[sound_index].length);
+  SDL_PauseAudioDevice(device_id, 0);
   return 1u;
 }
 
@@ -410,15 +486,56 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
       destination_rect.h = KGameoverRestartSprite.h;
       sprite_rect        = &KGameoverRestartSprite;
       break;
+    case DINORUNNER_SPRITE_STAR1:
+    case DINORUNNER_SPRITE_STAR2:
+    case DINORUNNER_SPRITE_STAR3:
+      destination_rect.w = kStarSprite.w;
+      destination_rect.h = kStarSprite.h;
+      temp_target.w      = kStarSprite.w;
+      temp_target.h      = kStarSprite.h;
+      temp_target.x      = kStarSprite.x;
+      temp_target.y      = kStarSprite.y + ((sprite - DINORUNNER_SPRITE_STAR1) * temp_target.h);
+      sprite_rect        = &temp_target;
+      break;
+    case DINORUNNER_SPRITE_MOON1:
+    case DINORUNNER_SPRITE_MOON2:
+    case DINORUNNER_SPRITE_MOON3:
+    case DINORUNNER_SPRITE_MOON4:
+    case DINORUNNER_SPRITE_MOON5:
+    case DINORUNNER_SPRITE_MOON6:
+    case DINORUNNER_SPRITE_MOON7: {
+      unsigned moon_phase = (sprite - DINORUNNER_SPRITE_MOON1);
+      destination_rect.w  = (sprite == DINORUNNER_SPRITE_MOON4) ? kMoonSprite.w * 2 : kMoonSprite.w;
+      destination_rect.h  = kMoonSprite.h;
+      temp_target.w       = destination_rect.w;
+      temp_target.h       = destination_rect.h;
+      temp_target.x       = kMoonSprite.x + kNightModePhases[moon_phase];
+      temp_target.y       = kMoonSprite.y;
+      sprite_rect         = &temp_target;
+    } break;
     default:
-      LOG("Invalid sprite: %d.", (int)sprite);
+      LOG("Request to draw invalid sprite: %d at position: (%d, %d)", (int)sprite, destination_rect.x,
+          destination_rect.y);
       return 0u;
+  }
+  unsigned char is_night_mode = 0;
+  dinorunner_isinverted(&hypervisor->dinorunner, &is_night_mode);
+  unsigned char opacity = 0;
+  dinorunner_opacity(&hypervisor->dinorunner, &opacity);
+  SDL_SetTextureAlphaMod(hypervisor->g_sprite, opacity);
+  SDL_SetTextureAlphaMod(hypervisor->g_background, opacity);
+  if (is_night_mode) {
+    SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF - kBackgroundColor, 0xFF - kBackgroundColor,
+                           0xFF - kBackgroundColor, opacity);
+  } else {
+    SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor, opacity);
   }
   SDL_RenderCopy(hypervisor->g_renderer, hypervisor->g_sprite, sprite_rect, &destination_rect);
   return 1u;
 }
 
-unsigned char dinorunner_log(const char* format, ...) {
+unsigned char dinorunner_log(void* user_data, const char* format, ...) {
+  (void)user_data;
   char buffer[256];
   va_list args;
   va_start(args, format);

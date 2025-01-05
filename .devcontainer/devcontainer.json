@@ -10,46 +10,31 @@
 		}
 	},
 	"runArgs": [
-			"--cap-add=SYS_PTRACE",
-			"--security-opt",
-			"seccomp=unconfined",
-			"--privileged",
-			"--network=host"
+		"--cap-add=SYS_PTRACE",
+		"--security-opt",
+		"seccomp=unconfined",
+		"--privileged",
+		"--network=host",
+		"--device=/dev/dri"
 	],
 	"appPort": [
 		"69:69"
 	],
-	// "features": {
-	// 	"ghcr.io/devcontainers-contrib/features/apt-packages:1": {}
-	// },
-	"settings" : {
-		"git.path": "/usr/bin/git"	
-	},
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Uncomment the next line to run commands after the container is created.
-	// "postCreateCommand": "cat /etc/os-release",
-
-	// Configure tool-specific properties.
-	// "customizations": {},
-
 	"mounts": [
 		"type=bind,source=/dev/bus/usb,target=/dev/bus/usb", // Make Debugger available. (ATM the docker image only has the stlink drivers)
-		"source=${localEnv:HOME}/.ssh,target=/home/devuser/.ssh,type=bind,consistency=cached", // Make ssh key available
-		"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached" // Mount graphic inside container to run GUIs
+		"source=${localEnv:HOME}/.ssh,target=/home/$(whoami)/.ssh,type=bind,consistency=cached", // Make ssh key available
+		"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached", // Mount graphic inside container to run GUIs
+		"source=/dev/dri,target=/dev/dri,type=bind,consistency=cached", // Mount graphic card driver inside container
+		"source=${localEnv:XDG_RUNTIME_DIR}/pulse/native,target=${localEnv:XDG_RUNTIME_DIR}/pulse/native,type=bind,consistency=cached", // Mount pulse audio for sound
+		// "source=~/.config/pulse/cookie,target=/root/.config/pulse/cookie,type=bind,consistency=cached"
 	],
-
 	"containerEnv": {
-		"DISPLAY": "${localEnv:DISPLAY}"
+		"DISPLAY": "${localEnv:DISPLAY}",
+		"XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
+		"PULSE_SERVER": "unix:${localEnv:XDG_RUNTIME_DIR}/pulse/native"
 	},
-
-	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
 	"remoteUser": "dino_runner",
+	"updateRemoteUserUID": true,
 	"customizations": {
 		"vscode": {
 			"extensions": [
