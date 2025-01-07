@@ -1,21 +1,31 @@
-version: '3'
 services:
+  libdinorunner:
+    build: .
+    user: dino_runner
+    volumes:
+      - .:/home/dino_runner/dinorunner
+    working_dir: /home/dino_runner/dinorunner
+    command: >
+      bash -c "cmake -DCMAKE_BUILD_TYPE=Release -S dinorunner -B dinorunner/build && cmake --build dinorunner/build"
+
   dinorunner:
     build: .
     user: dino_runner
-    environment:
-      - DISPLAY=$DISPLAY
-      - SSH_AUTH_SOCK=/tmp/ssh_auth_sock
-      - XAUTHORITY=$XAUTHORITY
-      - XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
-      - PULSE_SERVER=unix:$XDG_RUNTIME_DIR/pulse/native
+    network_mode: "host"
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - $HOME/.ssh:/home/dinorunner/.ssh
       - .:/home/dino_runner/dinorunner
       - /dev/dri:/dev/dri 
       - $XDG_RUNTIME_DIR/pulse/native:$XDG_RUNTIME_DIR/pulse/native
+    environment:
+      - DISPLAY=$DISPLAY
+      - SSH_AUTH_SOCK=/tmp/ssh_auth_sock
+      - XAUTHORITY=$XAUTHORITY
+      - XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR
+      - PULSE_SERVER=unix:$XDG_RUNTIME_DIR/pulse/native
     working_dir: /home/dino_runner/dinorunner
-    network_mode: "host"
+    depends_on:
+      - libdinorunner
     command: >
       bash -c "cmake -DCMAKE_BUILD_TYPE=Release -S demo -B demo/build && cmake --build demo/build && demo/bin/dinorunner_sdl"
