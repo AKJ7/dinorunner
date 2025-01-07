@@ -12,14 +12,12 @@ static enum dinorunner_sprite_e get_random_type(const struct horizonline_s* hori
   return dinorunner_srand() > horizonline->bump_threshold ? DINORUNNER_SPRITE_HORIZON2 : DINORUNNER_SPRITE_HORIZON1;
 }
 
-void dinorunner_horizonline_setsourcedimensions() {}
-
 void dinorunner_horizonline_reset(struct horizonline_s* horizonline) {
   horizonline->x_pos[0] = 0;
   horizonline->x_pos[1] = horizonline->dimensions.width;
 }
 
-void dinorunner_horizonline_updatexpos(struct horizonline_s* horizon_line, int pos, int increment) {
+static void dinorunner_horizonline_updatexpos(struct horizonline_s* horizon_line, int pos, int increment) {
   int line1 = pos;
   int line2 = (pos == 0);
   horizon_line->x_pos[line1] -= increment;

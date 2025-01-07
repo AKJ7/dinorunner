@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "dinorunner.h"
 
 #define LOG(format, ...) fprintf(stderr, "[%24s(%3d)] " format "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
@@ -285,7 +286,10 @@ unsigned char dinorunner_writehighscore(unsigned long high_score, void* user_dat
     LOG("Could not write: %lu. %s", high_score, strerror(errno));
     return 0u;
   }
-  fflush(hypervisor->highscore_store);
+  if (fflush(hypervisor->highscore_store) != 0) {
+    LOG("Could not flush data to file: %s", strerror(errno));
+    return 0u;
+  }
   LOG("Highscore: %lu successfully set!", high_score);
   return 1u;
 }
