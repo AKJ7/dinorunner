@@ -40,6 +40,19 @@ unsigned char dinorunner_log(void* user_data, const char* format, ...);
 </p>   
 
 ## Usage  
+
+This project is subdivided into two parts:
+1. **libdinorunner**: The actual library. It is written without any external dependency and is targetted to be used with any consivable system. It can directly be compiled into a project or as shared and static libraries using:
+```bash
+cmake -DCMAKE_BUILD_TYPE=Release -S dinorunner -B dinorunner/build && cmake --build dinorunner/build
+```
+See `dinorunner/lib` for the generated libraries objects. With 
+```bash
+sudo make install -C dinorunner/build/
+```
+the libraries can be installed system-wide.
+
+2. **dinorunner-sdl**: This is a running example of the project. It uses sdl2 to process user input and display the output of `libdinorunner` to the screen. 
 This project provides a preset docker container into which the program compiles and runs.
 Before running the examples in a docker container, the x-server needs to permit access to client outside its host. This is done using: `xhost +`.
 The simplest way to run the program is using docker-compose:
@@ -54,8 +67,6 @@ while requiring `libsdl2-dev` `libsdl2-image-dev` `libsdl2-gfx-dev` installable 
 ```shell
 sudo apt -y install libsdl2-dev libsdl2-image-dev libsdl2-gfx-dev
 ```
-The lib can be installed system-wide using the `sudo make install` command after generating 
-the Makefiles using CMake.
 
 ## API  
 The following functions can be used to interact with the dinorunner engine. See the demo for example.
