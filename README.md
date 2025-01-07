@@ -57,7 +57,7 @@ This project provides a preset docker container into which the program compiles 
 Before running the examples in a docker container, the x-server needs to permit access to client outside its host. This is done using: `xhost +`.
 The simplest way to run the program is using docker-compose:
 ```shell
-docker compose -f docker-compose.yml up
+docker compose -f docker-compose.yml up dinorunner
 ```
 Alternaively, using CMake:
 ```shell
