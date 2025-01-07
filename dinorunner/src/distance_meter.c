@@ -21,19 +21,10 @@ static unsigned long distancemeter_readhighscore(void* user_data) {
   return 0u;
 }
 
-void dinorunner_distancemeter_writehighscore(struct distance_meter_s* distance_meter, unsigned distance,
-                                             void* user_data) {
-  unsigned char read_result = dinorunner_writehighscore(distance, user_data);
-  if (read_result != 0) {
-    if (distance_meter->high_score < distance) {
-      distance_meter->high_score = distance;
-    }
-  }
-}
-
 static unsigned long_to_digit(unsigned long number, char* data, unsigned max_size) {
   unsigned digit_parsed;
   unsigned long rest = number;
+  rest %= (unsigned long)dinorunner_pow(10, max_size);
   for (digit_parsed = 0; digit_parsed < max_size; ++digit_parsed) {
     unsigned divisor = dinorunner_pow(10, (max_size - digit_parsed - 1));
     int current      = rest / divisor;
@@ -52,6 +43,16 @@ static unsigned long_to_digit(unsigned long number, char* data, unsigned max_siz
 
 static void dinorunner_distancemeter_calcxpos(struct distance_meter_s* distance_meter, unsigned canvas_width) {
   distance_meter->x = (int)canvas_width - (int)((distance_meter->width * distance_meter->max_score_units + 1)) * 2;
+}
+
+void dinorunner_distancemeter_writehighscore(struct distance_meter_s* distance_meter, unsigned distance,
+                                             void* user_data) {
+  unsigned char read_result = dinorunner_writehighscore(distance, user_data);
+  if (read_result != 0) {
+    if (distance_meter->high_score < distance) {
+      distance_meter->high_score = distance;
+    }
+  }
 }
 
 unsigned char dinorunner_distancemeter_draw(const struct distance_meter_s* distance_meter, unsigned digit_pos,
@@ -81,7 +82,8 @@ unsigned char dinorunner_distancemeter_draw(const struct distance_meter_s* dista
   return 1u;
 }
 
-void dinorunner_distancemeter_drawhighscore(const struct distance_meter_s* distance_meter, void* user_data) {
+static inline void dinorunner_distancemeter_drawhighscore(const struct distance_meter_s* distance_meter,
+                                                          void* user_data) {
   dinorunner_distancemeter_draw(distance_meter, 0, distance_meter->high_score, 1, user_data);
 }
 

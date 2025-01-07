@@ -45,10 +45,7 @@ void dinorunner_nightmode_init(struct nightmode_s* nightmode, unsigned container
   nightmode->y_pos         = 30;
   nightmode->current_phase = 0u;
   nightmode->opacity       = 0;
-  // nightmode->container_width = container_width;
   nightmode->draw_stars = 0;
-  // nightmode->sprite_pos.x    = pos->x;
-  // nightmode->sprite_pos.y    = pos->y;
   dinorunner_nightmode_placestars(nightmode, container_width);
 }
 

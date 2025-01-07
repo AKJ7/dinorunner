@@ -70,7 +70,7 @@ unsigned char dinorunner_horizon_init(struct horizon_s* horizon, const struct di
   return 1u;
 }
 
-unsigned char update_clouds(struct horizon_s* horizon, float delta_time, float current_speed, void* user_data) {
+static unsigned char update_clouds(struct horizon_s* horizon, float delta_time, float current_speed, void* user_data) {
   float cloud_speed     = (horizon->cloud_speed / 1000.0f) * delta_time * current_speed;
   int last_pos          = 0;
   float last_gap        = 0;
@@ -124,7 +124,8 @@ static void add_new_obstacle(struct horizon_s* horizon, float current_speed, voi
   }
 }
 
-unsigned char update_obstacles(struct horizon_s* horizon, float delta_time, float current_speed, void* user_data) {
+static unsigned char update_obstacles(struct horizon_s* horizon, float delta_time, float current_speed,
+                                      void* user_data) {
   for (unsigned i = 0u; i < DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_COUNT; ++i) {
     struct obstacle_s* obstacle = &horizon->obstacles[i];
     if (obstacle->is_alive) {
