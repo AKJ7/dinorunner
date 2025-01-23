@@ -1,6 +1,7 @@
 FROM ubuntu:noble
 
 ARG DOCKER_USER=dino_runner
+RUN userdel -r -f ubuntu
 
 ENV PULSE_SERVER="unix:${XDG_RUNTIME_DIR}/pulse/native"
 ENV TZ="Europe/Berlin"
