@@ -68,7 +68,6 @@ unsigned char dinorunner_restart(struct dinorunner_s* dinorunner) {
                                  dinorunner->user_data);
   dinorunner_horizon_reset(&dinorunner->horizon, dinorunner->user_data);
   dinorunner_trex_reset(&dinorunner->trex, dinorunner->user_data);
-  dinorunner_playsound(DINORUNNER_SOUND_BUTTON_PRESS, dinorunner->user_data);
   dinorunner_invert(dinorunner, 1u);
   dinorunner_update(dinorunner);
   return 1u;

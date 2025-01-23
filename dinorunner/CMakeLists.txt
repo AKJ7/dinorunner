@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 cmake_policy(PUSH)
 
 project(dinorunner 
-    VERSION 1.1.1
+    VERSION 1.1.2
     DESCRIPTION "Chrome's Dino game in C"
     LANGUAGES C)
 
