@@ -2,6 +2,7 @@ services:
   libdinorunner:
     build: .
     user: dino_runner
+    privileged: true
     volumes:
       - .:/home/dino_runner/dinorunner
     working_dir: /home/dino_runner/dinorunner
@@ -11,13 +12,16 @@ services:
   dinorunner:
     build: .
     user: dino_runner
+    privileged: true
     network_mode: "host"
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /dev/bus/usb:/dev/bus/usb
+      - /dev/input:/dev/input
       - $HOME/.ssh:/home/dinorunner/.ssh
-      - .:/home/dino_runner/dinorunner
+      - /tmp/.X11-unix:/tmp/.X11-unix
       - /dev/dri:/dev/dri 
       - $XDG_RUNTIME_DIR/pulse/native:$XDG_RUNTIME_DIR/pulse/native
+      - .:/home/dino_runner/dinorunner
     environment:
       - DISPLAY=$DISPLAY
       - SSH_AUTH_SOCK=/tmp/ssh_auth_sock

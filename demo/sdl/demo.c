@@ -61,6 +61,7 @@ static const uint32_t kWindowHeight          = kGameDimension.height + kPadding 
 static const uint32_t kWindowWidth           = kGameDimension.width + kPadding * 2;
 static const uint32_t kFrameRate             = 60u;
 static const uint8_t kBackgroundColor        = 0xF2;
+static const uint16_t kRumbleFrequency       = 0xFFFF;
 static const unsigned char kNightModePhases[DINORUNNER_CONFIG_NIGHTMODE_MOONPHASES] = {140, 120, 100, 60, 40, 20, 0};
 
 typedef struct audio_s {
@@ -81,6 +82,7 @@ typedef struct hypervisor_s {
   SDL_Texture* g_sprite;
   SDL_Texture* g_background;
   SDL_Surface* g_image;
+  SDL_Joystick* joystick;
 } hypervisor_s;
 
 static uint8_t system_preinit(hypervisor_s* hypervisor);
@@ -98,13 +100,14 @@ int main(int argc, char** argv) {
 }
 
 static uint8_t system_preinit(hypervisor_s* hypervisor) {
-  hypervisor->highscore_store  = 0;
-  hypervisor->g_window         = 0;
-  hypervisor->g_screen_surface = 0;
-  hypervisor->g_renderer       = 0;
-  hypervisor->g_sprite         = 0;
-  hypervisor->g_image          = 0;
-  hypervisor->g_background     = 0;
+  hypervisor->highscore_store  = NULL;
+  hypervisor->g_window         = NULL;
+  hypervisor->g_screen_surface = NULL;
+  hypervisor->g_renderer       = NULL;
+  hypervisor->g_sprite         = NULL;
+  hypervisor->g_image          = NULL;
+  hypervisor->g_background     = NULL;
+  hypervisor->joystick         = NULL;
   return 1u;
 }
 
@@ -174,6 +177,51 @@ static uint8_t load_scorefile(hypervisor_s* hypervisor) {
   return 1u;
 }
 
+static void unload_joystick(hypervisor_s* hypervisor) {
+  LOG("%s", "Unloading joysticks");
+  if (hypervisor->joystick != NULL) {
+    SDL_Joystick* joystick = hypervisor->joystick;
+    if (SDL_JoystickGetAttached(joystick)) {
+      const char* joystick_name = SDL_JoystickName(joystick);
+      LOG("Closing joystick: %s", joystick_name);
+      SDL_JoystickClose(joystick);
+    }
+  }
+}
+
+static uint8_t load_joystick(hypervisor_s* hypervisor) {
+  LOG("%s", "Loading joystick");
+  unload_joystick(hypervisor);
+  int numb_joystick = SDL_NumJoysticks();
+  LOG("Found %d joystick(s)", numb_joystick);
+  if (numb_joystick == 0) {
+    LOG("%s", "No joysticks found");
+    return 0u;
+  }
+  if (numb_joystick < 0) {
+    LOG("Error while getting joysticks: %s", SDL_GetError());
+    return 0u;
+  }
+  for (int i = 0; i < numb_joystick; ++i) {
+    SDL_Joystick* joystick = SDL_JoystickOpen(i);
+    if (joystick == NULL) {
+      LOG("%s", "Could not load joystick for vibration");
+      continue;
+    }
+    const char* name = SDL_JoystickName(joystick);
+    if (name == NULL) {
+      name = "Unknown";
+    }
+    int rumble_status    = SDL_JoystickHasRumble(joystick);
+    hypervisor->joystick = joystick;
+    int event_state      = SDL_JoystickEventState(SDL_ENABLE);
+    LOG("Found controller: %s. Rumble detected: %i. Enable_event: %i", name, rumble_status, event_state);
+    return 1u;
+  }
+  hypervisor->joystick = NULL;
+  return 0u;
+}
+
 static uint8_t system_init(hypervisor_s* hypervisor) {
   struct version_s version           = {0, 0, 0};
   const unsigned char kVersionResult = dinorunner_getversion(&version);
@@ -181,7 +229,11 @@ static uint8_t system_init(hypervisor_s* hypervisor) {
     return 0u;
   }
   LOG("Compiled with libdinorunner v%hu.%hu.%hu", version.major, version.minor, version.patch);
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+  SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
+  SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1");
+  SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5, "1");
+  SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+  if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
     LOG("SDL could not initialize! SDL_Error: %s", SDL_GetError());
     return 0u;
   }
@@ -211,25 +263,41 @@ static uint8_t system_init(hypervisor_s* hypervisor) {
   SDL_initFramerate(&hypervisor->fps_manager);
   SDL_setFramerate(&hypervisor->fps_manager, kFrameRate);
   status = dinorunner_init(&hypervisor->dinorunner, &kGameDimension, hypervisor);
-  return 1u;
+  return status;
 }
 
 static uint8_t system_run(hypervisor_s* hypervisor) {
   uint8_t quit = 0u;
   SDL_Event event;
-  unsigned char game_result = 0u;
+  unsigned char game_result    = 0u;
+  const int16_t kAxisThreshold = 0xFFF;
   while (!quit) {
-    int status = 1;
     SDL_RenderClear(hypervisor->g_renderer);
     while (SDL_PollEvent(&event) != 0) {
-      if (event.type == SDL_QUIT) {
-        quit = 1u;
+      switch (event.type) {
+        case SDL_QUIT:
+          quit = 1u;
+          break;
+        case SDL_JOYDEVICEADDED:
+        case SDL_JOYDEVICEREMOVED:
+          load_joystick(hypervisor);
+          break;
       }
     }
+    SDL_Joystick* joystick = hypervisor->joystick;
+    uint8_t button_state   = SDL_JoystickGetButton(hypervisor->joystick, 2);
+    int16_t axis_state     = SDL_JoystickGetAxis(hypervisor->joystick, 1);
+    uint8_t hat_state      = SDL_JoystickGetHat(joystick, 0);
+    SDL_HAT_UP;
     const uint8_t* current_key_state = SDL_GetKeyboardState(NULL);
-    if (current_key_state[SDL_SCANCODE_UP] || current_key_state[SDL_SCANCODE_SPACE]) {
+    uint8_t up_pressed =
+        (current_key_state[SDL_SCANCODE_UP] || current_key_state[SDL_SCANCODE_SPACE] || (hat_state == SDL_HAT_UP)) ||
+        (button_state == 1u) || (axis_state < -kAxisThreshold);
+    uint8_t down_pressed = current_key_state[SDL_SCANCODE_DOWN] || event.type == SDL_JOYBUTTONDOWN ||
+                           (hat_state == SDL_HAT_DOWN) || (axis_state > kAxisThreshold);
+    if (up_pressed) {
       dinorunner_onkeyup(&hypervisor->dinorunner);
-    } else if (current_key_state[SDL_SCANCODE_DOWN]) {
+    } else if (down_pressed) {
       dinorunner_onkeydown(&hypervisor->dinorunner);
     } else if (current_key_state[SDL_SCANCODE_ESCAPE]) {
       quit = 1u;
@@ -255,6 +323,7 @@ static uint8_t system_exit(hypervisor_s* hypervisor) {
     SDL_DestroyRenderer(hypervisor->g_renderer);
   }
   IMG_Quit();
+  unload_joystick(hypervisor);
   for (unsigned i = 0; i < sizeof(hypervisor->sound_effect) / sizeof(*hypervisor->sound_effect); ++i) {
     audio_s* sound_effect = &hypervisor->sound_effect[i];
     SDL_CloseAudioDevice(sound_effect->audio_device_id);
@@ -339,7 +408,20 @@ unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_dat
 }
 
 unsigned char dinorunner_vibrate(unsigned duration, void* user_data) {
-  // pass
+  hypervisor_s* hypervisor = (hypervisor_s*)user_data;
+  if (hypervisor == NULL) {
+    return 0u;
+  }
+  if (hypervisor->joystick == NULL) {
+    return 0u;
+  }
+  if (duration == 0) {
+    return 1u;
+  }
+  int result = SDL_JoystickRumble(hypervisor->joystick, kRumbleFrequency, kRumbleFrequency, duration);
+  if (result != -1) {
+    LOG("Could not vibrate for %u milliseconds", duration);
+  }
   return 1u;
 }
 

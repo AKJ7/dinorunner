@@ -15,7 +15,7 @@ It is designed to be used as a configurable backend library accessable to a wide
 - No heap allocations
 - No `typedef`s
 - Supports nightmode
-- Only requires 1200 bytes to store data structure
+- Only requires 1200 bytes to store data structure on x64_86
 
 The dinorunner was inspired by https://github.com/wayou/t-rex-runner from which the trex-assets were fetched.  
 The sound assets used in the demo originates from: https://www.sounds-resource.com/browser_games/googlechromedinosaurgame/sound/18002/ .
@@ -83,7 +83,7 @@ void dinorunner_onkeynone(struct dinorunner_s* dinorunner);
 ```
 
 ## TODO  
-- [x] Add sound and vibration support (~~vibration support~~)
+- [x] Add sound and vibration support
 - [x] Improve configurability
 - [x] Add night mode
 - [ ] ~~Add Python/Pygame demo~~ (No time! Implementation trivial.)
