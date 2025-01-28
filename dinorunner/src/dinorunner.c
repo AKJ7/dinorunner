@@ -40,9 +40,11 @@ unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dime
   dinorunner->inverted         = 0u;
   res &=
       dinorunner_horizon_init(&dinorunner->horizon, &dinorunner->dimension, -DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT);
-  dinorunner_distancemeter_init(&dinorunner->distance_meter, &text_dimension, dimension->width, dinorunner->user_data);
   res &= dinorunner_trex_init(&dinorunner->trex, dimension->width, dimension->height, dinorunner->user_data);
   res &= dinorunner_gameoverpanel_init(&dinorunner->gameoverpanel, dimension);
+  res &= dinorunner_clearcanvas(dinorunner->user_data);
+  res &= dinorunner_distancemeter_init(&dinorunner->distance_meter, &text_dimension, dimension->width,
+                                       dinorunner->user_data);
   return res;
 }
 
@@ -63,7 +65,7 @@ unsigned char dinorunner_restart(struct dinorunner_s* dinorunner) {
   dinorunner->current_speed = DINORUNNER_CONFIG_SPEED;
   // set_speed(DINORUNNER_CONFIG_SPEED);
   dinorunner->time = dinorunner_gettimestamp(dinorunner->user_data);
-  dinorunner_canvas_clear(dinorunner->user_data);
+  dinorunner_clearcanvas(dinorunner->user_data);
   dinorunner_distancemeter_reset(&dinorunner->distance_meter, dinorunner->distance_meter.high_score,
                                  dinorunner->user_data);
   dinorunner_horizon_reset(&dinorunner->horizon, dinorunner->user_data);
@@ -107,7 +109,11 @@ static void dinorunner_gameover(struct dinorunner_s* dinorunner) {
     dinorunner_distancemeter_writehighscore(&dinorunner->distance_meter, dinorunner->distance_meter.high_score,
                                             dinorunner->user_data);
   }
+  dinorunner_distancemeter_draw(&dinorunner->distance_meter, 0, last_score, 0, dinorunner->user_data);
+  dinorunner_distancemeter_draw(&dinorunner->distance_meter, 0, dinorunner->distance_meter.high_score, 1,
+                                dinorunner->user_data);
   dinorunner->time = dinorunner_gettimestamp(dinorunner->user_data);
+  dinorunner_clearcanvas(dinorunner->user_data);
 }
 
 static inline void dinorunner_createadjustedcollisionbox(const struct collision_box_s* box,
@@ -183,7 +189,7 @@ unsigned char dinorunner_update(struct dinorunner_s* dinorunner) {
   unsigned long delta_time = now - dinorunner->time;
   dinorunner->time         = now;
   if (dinorunner->playing) {
-    dinorunner_canvas_clear(dinorunner->user_data);
+    dinorunner_clearcanvas(dinorunner->user_data);
     if (dinorunner->trex.jumping) {
       dinorunner_trex_updatejump(&dinorunner->trex, delta_time, dinorunner->user_data);
     }
@@ -237,7 +243,7 @@ unsigned char dinorunner_update(struct dinorunner_s* dinorunner) {
     }
   }
   if (dinorunner->crashed) {
-    dinorunner_gameover(dinorunner);
+    dinorunner_gameoverpanel_draw(&dinorunner->gameoverpanel, dinorunner->user_data);
   } else if ((dinorunner->playing)) {
     dinorunner_trex_update(&dinorunner->trex, delta_time, TREX_STATUS_NONE, dinorunner->user_data);
   } else if ((!dinorunner->activated) && (dinorunner->trex.blink_count < DINORUNNER_CONFIG_MAX_BLINK_COUNT)) {
@@ -245,7 +251,6 @@ unsigned char dinorunner_update(struct dinorunner_s* dinorunner) {
   } else {
     dinorunner_trex_update(&dinorunner->trex, delta_time, TREX_STATUS_WAITING, dinorunner->user_data);
   }
-
   return 1u;
 }
 

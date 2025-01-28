@@ -116,12 +116,15 @@ static uint8_t render_background(hypervisor_s* hypervisor) {
                                                SDL_TEXTUREACCESS_TARGET, kWindowWidth, kWindowHeight);
   SDL_SetTextureBlendMode(hypervisor->g_background, SDL_BLENDMODE_BLEND);
   SDL_SetRenderTarget(hypervisor->g_renderer, hypervisor->g_background);
-  int status = SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
-  status     = SDL_RenderClear(hypervisor->g_renderer);
-  status     = SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor,
-                                      SDL_ALPHA_OPAQUE);
+  int status;
+  status = SDL_RenderClear(hypervisor->g_renderer);
+  status = SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
+  // status = SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor,
+  //                                 SDL_ALPHA_OPAQUE);
   SDL_assert(status == 0);
-  SDL_RenderFillRect(hypervisor->g_renderer, &game_rect);
+  // SDL_RenderFillRect(hypervisor->g_renderer, &game_rect);
+  SDL_RenderFillRect(hypervisor->g_renderer, NULL);
+  SDL_RenderPresent(hypervisor->g_renderer);
   return 1u;
 }
 
@@ -142,8 +145,8 @@ static uint8_t load_sprite(hypervisor_s* hypervisor) {
   SDL_assert(status == img_flags);
   SDL_Surface* image = IMG_Load(sprite_filename);
   SDL_assert(image != NULL);
-  if (image->format->BytesPerPixel == 2) {
-    LOG("%s", "Detected grayscale sprite image. Converting to RGB");
+  if (image->format->BytesPerPixel == 2u) {
+    LOG("%s", "Detected grayscale sprite image. Converting to RGB ...");
     SDL_Texture* my_texture = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_ARGB8888,
                                                 SDL_TEXTUREACCESS_STREAMING, image->w, image->h);
     unsigned char* pixel;
@@ -164,7 +167,7 @@ static uint8_t load_sprite(hypervisor_s* hypervisor) {
     SDL_UnlockTexture(my_texture);
     SDL_UnlockSurface(image);
     hypervisor->g_sprite = my_texture;
-  } else if (image->format->BytesPerPixel == 4) {
+  } else if (image->format->BytesPerPixel == 4u) {
     LOG("%s", "Detected RGB image. No conversion required.");
     hypervisor->g_sprite = IMG_LoadTexture(hypervisor->g_renderer, sprite_filename);
   } else {
@@ -314,7 +317,6 @@ static uint8_t system_run(hypervisor_s* hypervisor) {
   unsigned char game_result    = 0u;
   const int16_t kAxisThreshold = 0xFFF;
   while (!quit) {
-    SDL_RenderClear(hypervisor->g_renderer);
     while (SDL_PollEvent(&event) != 0) {
       switch (event.type) {
         case SDL_QUIT:
@@ -350,7 +352,6 @@ static uint8_t system_run(hypervisor_s* hypervisor) {
     if (game_result != 1u) {
       quit = 1u;
     }
-    SDL_RenderPresent(hypervisor->g_renderer);
     SDL_framerateDelay(&hypervisor->fps_manager);
   }
   return 1u;
@@ -401,7 +402,7 @@ unsigned char dinorunner_writehighscore(unsigned long high_score, void* user_dat
     LOG("Could not flush data to file: %s", strerror(errno));
     return 0u;
   }
-  LOG("Highscore: %lu successfully set!", high_score);
+  LOG("Highscore: %lu successfully written!", high_score);
   return 1u;
 }
 
@@ -424,7 +425,7 @@ unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_dat
     return 0u;
   }
   *high_score = stored_highscore;
-  LOG("Setting high score: %lu", stored_highscore);
+  LOG("High score: %lu successfully read", stored_highscore);
   return 1u;
 }
 
@@ -439,13 +440,13 @@ unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_dat
     return 0u;
   }
   int sound_index = sound - DINORUNNER_SOUND_BUTTON_PRESS;
-  if (sound < 0 || sound >= AUDIO_FILE_COUNT) {
+  if (sound_index < 0 || sound_index >= AUDIO_FILE_COUNT) {
     LOG("%s: %d", "Invalid sound play request", (int)sound);
     return 0u;
   }
-  int device_id = hypervisor->sound_effect[sound].audio_device_id;
-  SDL_QueueAudio(device_id, hypervisor->sound_effect[sound_index].pos, hypervisor->sound_effect[sound_index].length);
-  SDL_PauseAudioDevice(device_id, 0);
+  audio_s* audio = &hypervisor->sound_effect[sound_index];
+  SDL_QueueAudio(audio->audio_device_id, audio->pos, audio->length);
+  SDL_PauseAudioDevice(audio->audio_device_id, 0);
   return 1u;
 }
 
@@ -464,8 +465,17 @@ unsigned char dinorunner_vibrate(unsigned duration, void* user_data) {
   return result != -1;
 }
 
-unsigned char dinorunner_canvas_clear(void* user_data) {
-  // pass
+unsigned char dinorunner_clearcanvas(void* user_data) {
+  hypervisor_s* hypervisor = (hypervisor_s*)user_data;
+  if (hypervisor == NULL) {
+    return 0u;
+  }
+  SDL_RenderPresent(hypervisor->g_renderer);
+  int clear_result = SDL_RenderClear(hypervisor->g_renderer);
+  if (clear_result != 0) {
+    LOG("Could not clear canvas: %s", SDL_GetError());
+    return 0u;
+  }
   return 1u;
 }
 
@@ -643,18 +653,18 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
           destination_rect.y);
       return 0u;
   }
-  unsigned char is_night_mode = 0;
-  dinorunner_isinverted(&hypervisor->dinorunner, &is_night_mode);
-  unsigned char opacity = 0;
-  dinorunner_opacity(&hypervisor->dinorunner, &opacity);
-  SDL_SetTextureAlphaMod(hypervisor->g_sprite, opacity);
-  SDL_SetTextureAlphaMod(hypervisor->g_background, opacity);
-  if (is_night_mode) {
-    SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF - kBackgroundColor, 0xFF - kBackgroundColor,
-                           0xFF - kBackgroundColor, opacity);
-  } else {
-    SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor, opacity);
-  }
+  // unsigned char is_night_mode = 0;
+  // dinorunner_isinverted(&hypervisor->dinorunner, &is_night_mode);
+  // unsigned char opacity = 0;
+  // dinorunner_opacity(&hypervisor->dinorunner, &opacity);
+  // SDL_SetTextureAlphaMod(hypervisor->g_sprite, opacity);
+  // SDL_SetTextureAlphaMod(hypervisor->g_background, opacity);
+  // if (is_night_mode) {
+  //   SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF - kBackgroundColor, 0xFF - kBackgroundColor,
+  //                          0xFF - kBackgroundColor, opacity);
+  // } else {
+  //   SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor, opacity);
+  // }
   SDL_RenderCopy(hypervisor->g_renderer, hypervisor->g_sprite, sprite_rect, &destination_rect);
   return 1u;
 }

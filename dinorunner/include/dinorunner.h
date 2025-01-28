@@ -519,7 +519,7 @@ unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_dat
  * @param user_data Given user data
  * @return unsigned char 1 on success, 0 otherwise as the user sees fit
  */
-unsigned char dinorunner_canvas_clear(void* user_data);
+unsigned char dinorunner_clearcanvas(void* user_data);
 
 /**
  * @brief Game's request to log messages
