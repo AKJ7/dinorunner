@@ -125,11 +125,53 @@ static uint8_t render_background(hypervisor_s* hypervisor) {
   return 1u;
 }
 
+/**
+ * @brief Load given sprite image to the GPU
+ * 
+ * @warning The image used in the official Chrome's T-Rex is 
+ * a Grayscale PNG image, in which each pixel is comprised of 
+ * 2 bytes, the alpha and the grey scale value. 
+ * This routine tries to detect the number of bytes per 
+ * pixel. In case of two, it converts the image into its RGB
+ * representation as SDL doesn't support grayscale images.
+ * Otherwise the image is loaded as normal.
+ */
 static uint8_t load_sprite(hypervisor_s* hypervisor) {
   const int img_flags = IMG_INIT_PNG;
   int status          = IMG_Init(img_flags) & img_flags;
   SDL_assert(status == img_flags);
-  hypervisor->g_sprite = IMG_LoadTexture(hypervisor->g_renderer, sprite_filename);
+  SDL_Surface* image = IMG_Load(sprite_filename);
+  SDL_assert(image != NULL);
+  if (image->format->BytesPerPixel == 2) {
+    LOG("%s", "Detected grayscale sprite image. Converting to RGB");
+    SDL_Texture* my_texture = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_ARGB8888,
+                                                SDL_TEXTUREACCESS_STREAMING, image->w, image->h);
+    unsigned char* pixel;
+    int pitch = 0;
+    SDL_LockTexture(my_texture, NULL, (void**)&pixel, &pitch);
+    SDL_LockSurface(image);
+    unsigned char* sprite_pixels = image->pixels;
+    for (int i = 0; i < image->h; ++i) {
+      for (int j = 0, k = 0, l = 0; l < image->w; j += image->format->BytesPerPixel, k += 4, l++) {
+        int source_pos        = (i * image->pitch) + j;
+        int target_pos        = (i * pitch) + k;
+        pixel[target_pos + 0] = sprite_pixels[source_pos + 0];
+        pixel[target_pos + 1] = sprite_pixels[source_pos + 0];
+        pixel[target_pos + 2] = sprite_pixels[source_pos + 0];
+        pixel[target_pos + 3] = sprite_pixels[source_pos + 1];
+      }
+    }
+    SDL_UnlockTexture(my_texture);
+    SDL_UnlockSurface(image);
+    hypervisor->g_sprite = my_texture;
+  } else if (image->format->BytesPerPixel == 4) {
+    LOG("%s", "Detected RGB image. No conversion required.");
+    hypervisor->g_sprite = IMG_LoadTexture(hypervisor->g_renderer, sprite_filename);
+  } else {
+    LOG("%s", "Could not process sprite image!");
+    return 0;
+  }
+  SDL_FreeSurface(image);
   SDL_assert(hypervisor->g_sprite);
   SDL_SetTextureBlendMode(hypervisor->g_sprite, SDL_BLENDMODE_BLEND);
   return 1u;
@@ -419,10 +461,7 @@ unsigned char dinorunner_vibrate(unsigned duration, void* user_data) {
     return 1u;
   }
   int result = SDL_JoystickRumble(hypervisor->joystick, kRumbleFrequency, kRumbleFrequency, duration);
-  if (result != -1) {
-    LOG("Could not vibrate for %u milliseconds", duration);
-  }
-  return 1u;
+  return result != -1;
 }
 
 unsigned char dinorunner_canvas_clear(void* user_data) {
