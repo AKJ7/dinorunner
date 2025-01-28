@@ -29,7 +29,7 @@ unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_dat
 unsigned long dinorunner_gettimestamp(void* user_data);
 unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_data);
 unsigned char dinorunner_vibrate(unsigned duration, void* user_data);
-unsigned char dinorunner_canvas_clear(void* user_data);
+unsigned char dinorunner_clearcanvas(void* user_data);
 unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, void* user_data);
 unsigned char dinorunner_log(void* user_data, const char* format, ...);
 ```
@@ -86,4 +86,3 @@ void dinorunner_onkeynone(struct dinorunner_s* dinorunner);
 - [x] Add sound and vibration support
 - [x] Improve configurability
 - [x] Add night mode
-- [ ] ~~Add Python/Pygame demo~~ (No time! Implementation trivial.)
