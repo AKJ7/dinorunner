@@ -26,7 +26,7 @@ unsigned char dinorunner_cloud_update(struct cloud_s* cloud, float speed, void* 
   if (!cloud->remove) {
     cloud->x -= dinorunner_ceilf(speed);
     struct pos_s pos = {.x = cloud->x, .y = cloud->y};
-    res              = dinorunner_draw(DINORUNNER_SPRITE_CLOUD, &pos, user_data);
+    res              = dinorunner_draw(DINORUNNER_SPRITE_CLOUD, &pos, 0xFF, user_data);
     if (!dinorunner_cloud_isvisible(cloud)) {
       cloud->remove = 1;
     }
