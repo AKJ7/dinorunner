@@ -15,7 +15,8 @@ It is designed to be used as a configurable backend library accessable to a wide
 - No heap allocations
 - No `typedef`s
 - Supports nightmode
-- Only requires 1200 bytes to store data structure on x64_86
+- Only requires 1200 bytes to store data structure on x86_64
+- Supports variadic jump heights
 
 The dinorunner was inspired by https://github.com/wayou/t-rex-runner from which the trex-assets were fetched.  
 The sound assets used in the demo originates from: https://www.sounds-resource.com/browser_games/googlechromedinosaurgame/sound/18002/ .
@@ -30,7 +31,7 @@ unsigned long dinorunner_gettimestamp(void* user_data);
 unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_data);
 unsigned char dinorunner_vibrate(unsigned duration, void* user_data);
 unsigned char dinorunner_clearcanvas(void* user_data);
-unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, void* user_data);
+unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, unsigned char opacity, void* user_data);
 unsigned char dinorunner_log(void* user_data, const char* format, ...);
 ```
 

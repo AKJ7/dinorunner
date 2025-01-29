@@ -168,7 +168,7 @@ void dinorunner_trex_updatejump(struct trex_s* trex, float delta_time, void* use
     trex->y_pos += dinorunner_roundf(trex->jump_velocity * frames_elapsed);
   }
   trex->jump_velocity += DINORUNNER_CONFIG_TREX_GRAVITY * frames_elapsed;
-  if (trex->y_pos < DINORUNNER_CONFIG_TREX_MIN_JUMP_HEIGHT || trex->speed_drop) {
+  if (trex->y_pos < trex->min_jump_height || trex->speed_drop) {
     trex->reached_min_height = 1u;
   }
   if (trex->y_pos < DINORUNNER_CONFIG_TREX_MAX_JUMP_HEIGHT || trex->speed_drop) {
