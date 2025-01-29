@@ -328,11 +328,10 @@ static uint8_t system_run(hypervisor_s* hypervisor) {
           break;
       }
     }
-    SDL_Joystick* joystick = hypervisor->joystick;
-    uint8_t button_state   = SDL_JoystickGetButton(hypervisor->joystick, 2);
-    int16_t axis_state     = SDL_JoystickGetAxis(hypervisor->joystick, 1);
-    uint8_t hat_state      = SDL_JoystickGetHat(joystick, 0);
-    SDL_HAT_UP;
+    SDL_Joystick* joystick           = hypervisor->joystick;
+    uint8_t button_state             = SDL_JoystickGetButton(hypervisor->joystick, 2);
+    int16_t axis_state               = SDL_JoystickGetAxis(hypervisor->joystick, 1);
+    uint8_t hat_state                = SDL_JoystickGetHat(joystick, 0);
     const uint8_t* current_key_state = SDL_GetKeyboardState(NULL);
     uint8_t up_pressed =
         (current_key_state[SDL_SCANCODE_UP] || current_key_state[SDL_SCANCODE_SPACE] || (hat_state == SDL_HAT_UP)) ||
@@ -479,7 +478,8 @@ unsigned char dinorunner_clearcanvas(void* user_data) {
   return 1u;
 }
 
-unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, void* user_data) {
+unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, unsigned char opacity,
+                              void* user_data) {
   if (user_data == NULL) {
     return 0u;
   }
@@ -653,18 +653,7 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
           destination_rect.y);
       return 0u;
   }
-  // unsigned char is_night_mode = 0;
-  // dinorunner_isinverted(&hypervisor->dinorunner, &is_night_mode);
-  // unsigned char opacity = 0;
-  // dinorunner_opacity(&hypervisor->dinorunner, &opacity);
-  // SDL_SetTextureAlphaMod(hypervisor->g_sprite, opacity);
-  // SDL_SetTextureAlphaMod(hypervisor->g_background, opacity);
-  // if (is_night_mode) {
-  //   SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF - kBackgroundColor, 0xFF - kBackgroundColor,
-  //                          0xFF - kBackgroundColor, opacity);
-  // } else {
-  //   SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor, opacity);
-  // }
+  SDL_SetTextureAlphaMod(hypervisor->g_sprite, opacity);
   SDL_RenderCopy(hypervisor->g_renderer, hypervisor->g_sprite, sprite_rect, &destination_rect);
   return 1u;
 }

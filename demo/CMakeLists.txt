@@ -23,6 +23,9 @@ add_subdirectory(${DINORUNNER_LIB_PATH} ${DINORUNNER_LIB_PATH}/lib)
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIR})
+
 find_package(SDL2_IMAGE REQUIRED)
 include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
 
@@ -33,4 +36,4 @@ PKG_SEARCH_MODULE(SDL2_gfx REQUIRED SDL2_gfx)
 add_executable(dinorunner_sdl sdl/demo.c)
 
 target_link_directories(dinorunner_sdl PRIVATE ${PROJECT_SOURCE_DIR}/../dinorunner/lib)
-target_link_libraries(dinorunner_sdl dinorunner ${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES} ${SDL2_gfx_LIBRARIES})
+target_link_libraries(dinorunner_sdl dinorunner ${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES} ${SDL2_gfx_LIBRARIES} ${OPENGL_LIBRARIES})

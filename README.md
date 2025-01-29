@@ -75,7 +75,6 @@ The following functions can be used to interact with the dinorunner engine. See 
 unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dimension_s* dimension, void* user_data);
 unsigned char dinorunner_update(struct dinorunner_s* dinorunner);
 unsigned char dinorunner_getversion(struct version_s* version);
-unsigned char dinorunner_opacity(struct dinorunner_s* dinorunner, unsigned char* opacity);
 unsigned char dinorunner_isinverted(struct dinorunner_s* dinorunner, unsigned char* night_mode);
 void dinorunner_onkeyup(struct dinorunner_s* dinorunner);
 void dinorunner_onkeydown(struct dinorunner_s* dinorunner);

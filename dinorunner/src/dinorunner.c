@@ -285,11 +285,6 @@ void dinorunner_onkeynone(struct dinorunner_s* dinorunner) {
   dinorunner_trex_endjump(&dinorunner->trex);
 }
 
-unsigned char dinorunner_opacity(struct dinorunner_s* dinorunner, unsigned char* opacity) {
-  *opacity = dinorunner->inverted ? (dinorunner->horizon.nightmode.opacity * 0xFF) : 0xFF;
-  return 1u;
-}
-
 unsigned char dinorunner_isinverted(struct dinorunner_s* dinorunner, unsigned char* night_mode) {
   *night_mode = dinorunner->inverted;
   return 1u;
