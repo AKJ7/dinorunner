@@ -39,6 +39,9 @@ unsigned char dinorunner_log(void* user_data, const char* format, ...);
 <p align="center">
   <img src="https://github.com/AKJ7/dinorunner/blob/9f8ccd088d952062bda3dfc1b6aff48846028be9/assets/demo.gif" />
 </p>   
+<p align="center">
+  <img src="https://github.com/AKJ7/dinorunner/blob/fd7c8ae9c22e98f57daca17f15a53548cd8a651f/assets/demo_nightmode.gif" />
+</p>
 
 ## Usage  
 
