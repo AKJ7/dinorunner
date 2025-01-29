@@ -5,6 +5,7 @@
  *  You may use, distribute and modify this code under the 
  *  terms of the GPL license.
  */
+
 #include <SDL.h>
 #include <SDL2_framerate.h>
 #include <SDL_image.h>
@@ -77,11 +78,10 @@ typedef struct hypervisor_s {
   audio_s sound_effect[AUDIO_FILE_COUNT];
   FILE* highscore_store;
   SDL_Window* g_window;
-  SDL_Surface* g_screen_surface;
   SDL_Renderer* g_renderer;
   SDL_Texture* g_sprite;
+  SDL_Texture* g_inverted_sprite;
   SDL_Texture* g_background;
-  SDL_Surface* g_image;
   SDL_Joystick* joystick;
 } hypervisor_s;
 
@@ -100,19 +100,18 @@ int main(int argc, char** argv) {
 }
 
 static uint8_t system_preinit(hypervisor_s* hypervisor) {
-  hypervisor->highscore_store  = NULL;
-  hypervisor->g_window         = NULL;
-  hypervisor->g_screen_surface = NULL;
-  hypervisor->g_renderer       = NULL;
-  hypervisor->g_sprite         = NULL;
-  hypervisor->g_image          = NULL;
-  hypervisor->g_background     = NULL;
-  hypervisor->joystick         = NULL;
+  hypervisor->highscore_store   = NULL;
+  hypervisor->g_window          = NULL;
+  hypervisor->g_renderer        = NULL;
+  hypervisor->g_sprite          = NULL;
+  hypervisor->g_inverted_sprite = NULL;
+  hypervisor->g_background      = NULL;
+  hypervisor->joystick          = NULL;
   return 1u;
 }
 
 static uint8_t render_background(hypervisor_s* hypervisor) {
-  hypervisor->g_background = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_ARGB8888,
+  hypervisor->g_background = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_RGBA8888,
                                                SDL_TEXTUREACCESS_TARGET, kWindowWidth, kWindowHeight);
   SDL_SetTextureBlendMode(hypervisor->g_background, SDL_BLENDMODE_BLEND);
   SDL_SetRenderTarget(hypervisor->g_renderer, hypervisor->g_background);
@@ -121,15 +120,57 @@ static uint8_t render_background(hypervisor_s* hypervisor) {
   status = SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
   // status = SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor,
   //                                 SDL_ALPHA_OPAQUE);
-  SDL_assert(status == 0);
   // SDL_RenderFillRect(hypervisor->g_renderer, &game_rect);
+  SDL_assert(status == 0);
   SDL_RenderFillRect(hypervisor->g_renderer, NULL);
   SDL_RenderPresent(hypervisor->g_renderer);
   return 1u;
 }
 
+static uint8_t load_inverted_textures(hypervisor_s* hypervisor) {
+  if (hypervisor == NULL) {
+    return 0u;
+  }
+  if (hypervisor->g_sprite == NULL) {
+    LOG("%s", "Sprite not yet loaded");
+    return 0u;
+  }
+  SDL_Texture* sprites = hypervisor->g_sprite;
+  uint32_t format;
+  int access, width, height;
+  SDL_QueryTexture(sprites, &format, &access, &width, &height);
+  SDL_Texture* isprites = SDL_CreateTexture(hypervisor->g_renderer, format, access, width, height);
+  if (isprites == NULL) {
+    LOG("%s", "Texture creation failed");
+    return 0u;
+  }
+  unsigned char *pixel, *ipixel;
+  int pitch, ipitch;
+  int lock_result = SDL_LockTexture(sprites, NULL, (void**)&pixel, &pitch);
+  lock_result |= SDL_LockTexture(isprites, NULL, (void**)&ipixel, &ipitch);
+  if (lock_result != 0) {
+    LOG("%s", "Could not lock texture");
+    return 0u;
+  }
+  for (int i = 0; i < height; ++i) {
+    for (int j = 0, l = 0; l < width; l++, j += 4) {
+      int pos         = (i * pitch) + j;
+      ipixel[pos + 3] = 0xFF - pixel[pos + 3];
+      ipixel[pos + 2] = 0xFF - pixel[pos + 2];
+      ipixel[pos + 1] = 0xFF - pixel[pos + 1];
+      ipixel[pos + 0] = pixel[pos + 0];
+    }
+  }
+  SDL_UnlockTexture(sprites);
+  SDL_UnlockTexture(isprites);
+  hypervisor->g_inverted_sprite = isprites;
+  return 1u;
+}
+
 /**
- * @brief Load given sprite image to the GPU
+ * @brief Load given sprite image to the GPU. This is done in 
+ * the CPU because it happens once during the init phase. 
+ * Don't want to write a shader for it ...
  * 
  * @warning The image used in the official Chrome's T-Rex is 
  * a Grayscale PNG image, in which each pixel is comprised of 
@@ -147,7 +188,7 @@ static uint8_t load_sprite(hypervisor_s* hypervisor) {
   SDL_assert(image != NULL);
   if (image->format->BytesPerPixel == 2u) {
     LOG("%s", "Detected grayscale sprite image. Converting to RGB ...");
-    SDL_Texture* my_texture = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_ARGB8888,
+    SDL_Texture* my_texture = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_RGBA8888,
                                                 SDL_TEXTUREACCESS_STREAMING, image->w, image->h);
     unsigned char* pixel;
     int pitch = 0;
@@ -158,10 +199,10 @@ static uint8_t load_sprite(hypervisor_s* hypervisor) {
       for (int j = 0, k = 0, l = 0; l < image->w; j += image->format->BytesPerPixel, k += 4, l++) {
         int source_pos        = (i * image->pitch) + j;
         int target_pos        = (i * pitch) + k;
-        pixel[target_pos + 0] = sprite_pixels[source_pos + 0];
-        pixel[target_pos + 1] = sprite_pixels[source_pos + 0];
+        pixel[target_pos + 3] = sprite_pixels[source_pos + 0];
         pixel[target_pos + 2] = sprite_pixels[source_pos + 0];
-        pixel[target_pos + 3] = sprite_pixels[source_pos + 1];
+        pixel[target_pos + 1] = sprite_pixels[source_pos + 0];
+        pixel[target_pos + 0] = sprite_pixels[source_pos + 1];
       }
     }
     SDL_UnlockTexture(my_texture);
@@ -172,12 +213,13 @@ static uint8_t load_sprite(hypervisor_s* hypervisor) {
     hypervisor->g_sprite = IMG_LoadTexture(hypervisor->g_renderer, sprite_filename);
   } else {
     LOG("%s", "Could not process sprite image!");
-    return 0;
   }
   SDL_FreeSurface(image);
   SDL_assert(hypervisor->g_sprite);
+  uint8_t inverted = load_inverted_textures(hypervisor);
   SDL_SetTextureBlendMode(hypervisor->g_sprite, SDL_BLENDMODE_BLEND);
-  return 1u;
+  SDL_SetTextureBlendMode(hypervisor->g_inverted_sprite, SDL_BLENDMODE_BLEND);
+  return inverted;
 }
 
 static uint8_t load_sounds(hypervisor_s* hypervisor) {
@@ -471,6 +513,13 @@ unsigned char dinorunner_clearcanvas(void* user_data) {
   }
   SDL_RenderPresent(hypervisor->g_renderer);
   int clear_result = SDL_RenderClear(hypervisor->g_renderer);
+  // Using a shortcut to change the background color one frame too late.
+  unsigned char is_reversed, reversed_status;
+  reversed_status                = dinorunner_isinverted(&hypervisor->dinorunner, &is_reversed);
+  const uint8_t background_color = is_reversed ? 0x00 : 0xFF;
+  clear_result |= SDL_SetRenderDrawColor(hypervisor->g_renderer, background_color, background_color, background_color,
+                                         SDL_ALPHA_OPAQUE);
+  clear_result |= SDL_RenderFillRect(hypervisor->g_renderer, NULL);
   if (clear_result != 0) {
     LOG("Could not clear canvas: %s", SDL_GetError());
     return 0u;
@@ -654,7 +703,10 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
       return 0u;
   }
   SDL_SetTextureAlphaMod(hypervisor->g_sprite, opacity);
-  SDL_RenderCopy(hypervisor->g_renderer, hypervisor->g_sprite, sprite_rect, &destination_rect);
+  unsigned char is_inverted, inverted_result;
+  inverted_result             = dinorunner_isinverted(&hypervisor->dinorunner, &is_inverted);
+  SDL_Texture* source_texture = is_inverted ? hypervisor->g_inverted_sprite : hypervisor->g_sprite;
+  SDL_RenderCopy(hypervisor->g_renderer, source_texture, sprite_rect, &destination_rect);
   return 1u;
 }
 
