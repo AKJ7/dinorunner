@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "dinorunner.h"
 
 #define LOG(format, ...) fprintf(stderr, "[%24s(%3d)] " format "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
@@ -60,6 +61,7 @@ static const uint32_t kWindowHeight          = kGameDimension.height + kPadding 
 static const uint32_t kWindowWidth           = kGameDimension.width + kPadding * 2;
 static const uint32_t kFrameRate             = 60u;
 static const uint8_t kBackgroundColor        = 0xF2;
+static const uint16_t kRumbleFrequency       = 0xFFFF;
 static const unsigned char kNightModePhases[DINORUNNER_CONFIG_NIGHTMODE_MOONPHASES] = {140, 120, 100, 60, 40, 20, 0};
 
 typedef struct audio_s {
@@ -75,11 +77,11 @@ typedef struct hypervisor_s {
   audio_s sound_effect[AUDIO_FILE_COUNT];
   FILE* highscore_store;
   SDL_Window* g_window;
-  SDL_Surface* g_screen_surface;
   SDL_Renderer* g_renderer;
   SDL_Texture* g_sprite;
+  SDL_Texture* g_inverted_sprite;
   SDL_Texture* g_background;
-  SDL_Surface* g_image;
+  SDL_Joystick* joystick;
 } hypervisor_s;
 
 static uint8_t system_preinit(hypervisor_s* hypervisor);
@@ -97,38 +99,126 @@ int main(int argc, char** argv) {
 }
 
 static uint8_t system_preinit(hypervisor_s* hypervisor) {
-  hypervisor->highscore_store  = 0;
-  hypervisor->g_window         = 0;
-  hypervisor->g_screen_surface = 0;
-  hypervisor->g_renderer       = 0;
-  hypervisor->g_sprite         = 0;
-  hypervisor->g_image          = 0;
-  hypervisor->g_background     = 0;
+  hypervisor->highscore_store   = NULL;
+  hypervisor->g_window          = NULL;
+  hypervisor->g_renderer        = NULL;
+  hypervisor->g_sprite          = NULL;
+  hypervisor->g_inverted_sprite = NULL;
+  hypervisor->g_background      = NULL;
+  hypervisor->joystick          = NULL;
   return 1u;
 }
 
 static uint8_t render_background(hypervisor_s* hypervisor) {
-  hypervisor->g_background = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_ARGB8888,
+  hypervisor->g_background = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_RGBA8888,
                                                SDL_TEXTUREACCESS_TARGET, kWindowWidth, kWindowHeight);
   SDL_SetTextureBlendMode(hypervisor->g_background, SDL_BLENDMODE_BLEND);
   SDL_SetRenderTarget(hypervisor->g_renderer, hypervisor->g_background);
-  int status = SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
-  status     = SDL_RenderClear(hypervisor->g_renderer);
-  status     = SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor,
-                                      SDL_ALPHA_OPAQUE);
+  int status;
+  status = SDL_RenderClear(hypervisor->g_renderer);
+  status = SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
+  // status = SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor,
+  //                                 SDL_ALPHA_OPAQUE);
+  // SDL_RenderFillRect(hypervisor->g_renderer, &game_rect);
   SDL_assert(status == 0);
-  SDL_RenderFillRect(hypervisor->g_renderer, &game_rect);
+  SDL_RenderFillRect(hypervisor->g_renderer, NULL);
+  SDL_RenderPresent(hypervisor->g_renderer);
   return 1u;
 }
 
+static uint8_t load_inverted_textures(hypervisor_s* hypervisor) {
+  if (hypervisor == NULL) {
+    return 0u;
+  }
+  if (hypervisor->g_sprite == NULL) {
+    LOG("%s", "Sprite not yet loaded");
+    return 0u;
+  }
+  SDL_Texture* sprites = hypervisor->g_sprite;
+  uint32_t format;
+  int access, width, height;
+  SDL_QueryTexture(sprites, &format, &access, &width, &height);
+  SDL_Texture* isprites = SDL_CreateTexture(hypervisor->g_renderer, format, access, width, height);
+  if (isprites == NULL) {
+    LOG("%s", "Texture creation failed");
+    return 0u;
+  }
+  unsigned char *pixel, *ipixel;
+  int pitch, ipitch;
+  int lock_result = SDL_LockTexture(sprites, NULL, (void**)&pixel, &pitch);
+  lock_result |= SDL_LockTexture(isprites, NULL, (void**)&ipixel, &ipitch);
+  if (lock_result != 0) {
+    LOG("%s", "Could not lock texture");
+    return 0u;
+  }
+  for (int i = 0; i < height; ++i) {
+    for (int j = 0, l = 0; l < width; l++, j += 4) {
+      int pos         = (i * pitch) + j;
+      ipixel[pos + 3] = 0xFF - pixel[pos + 3];
+      ipixel[pos + 2] = 0xFF - pixel[pos + 2];
+      ipixel[pos + 1] = 0xFF - pixel[pos + 1];
+      ipixel[pos + 0] = pixel[pos + 0];
+    }
+  }
+  SDL_UnlockTexture(sprites);
+  SDL_UnlockTexture(isprites);
+  hypervisor->g_inverted_sprite = isprites;
+  return 1u;
+}
+
+/**
+ * @brief Load given sprite image to the GPU. This is done in 
+ * the CPU because it happens once during the init phase. 
+ * Don't want to write a shader for it ...
+ * 
+ * @warning The image used in the official Chrome's T-Rex is 
+ * a Grayscale PNG image, in which each pixel is comprised of 
+ * 2 bytes, the alpha and the grey scale value. 
+ * This routine tries to detect the number of bytes per 
+ * pixel. In case of two, it converts the image into its RGB
+ * representation as SDL doesn't support grayscale images.
+ * Otherwise the image is loaded as normal.
+ */
 static uint8_t load_sprite(hypervisor_s* hypervisor) {
   const int img_flags = IMG_INIT_PNG;
   int status          = IMG_Init(img_flags) & img_flags;
   SDL_assert(status == img_flags);
-  hypervisor->g_sprite = IMG_LoadTexture(hypervisor->g_renderer, sprite_filename);
+  SDL_Surface* image = IMG_Load(sprite_filename);
+  SDL_assert(image != NULL);
+  if (image->format->BytesPerPixel == 2u) {
+    LOG("%s", "Detected grayscale sprite image. Converting to RGB ...");
+    SDL_Texture* my_texture = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_RGBA8888,
+                                                SDL_TEXTUREACCESS_STREAMING, image->w, image->h);
+    unsigned char* pixel;
+    int pitch = 0;
+    SDL_LockTexture(my_texture, NULL, (void**)&pixel, &pitch);
+    SDL_LockSurface(image);
+    unsigned char* sprite_pixels = image->pixels;
+    for (int i = 0; i < image->h; ++i) {
+      for (int j = 0, k = 0, l = 0; l < image->w; j += image->format->BytesPerPixel, k += 4, l++) {
+        int source_pos        = (i * image->pitch) + j;
+        int target_pos        = (i * pitch) + k;
+        pixel[target_pos + 3] = sprite_pixels[source_pos + 0];
+        pixel[target_pos + 2] = sprite_pixels[source_pos + 0];
+        pixel[target_pos + 1] = sprite_pixels[source_pos + 0];
+        pixel[target_pos + 0] = sprite_pixels[source_pos + 1];
+      }
+    }
+    SDL_UnlockTexture(my_texture);
+    SDL_UnlockSurface(image);
+    hypervisor->g_sprite = my_texture;
+  } else if (image->format->BytesPerPixel == 4u) {
+    LOG("%s", "Detected RGB image. No conversion required.");
+    hypervisor->g_sprite = IMG_LoadTexture(hypervisor->g_renderer, sprite_filename);
+  } else {
+    LOG("%s", "Could not process sprite image!");
+  }
+  SDL_FreeSurface(image);
   SDL_assert(hypervisor->g_sprite);
+  uint8_t inverted = load_inverted_textures(hypervisor);
   SDL_SetTextureBlendMode(hypervisor->g_sprite, SDL_BLENDMODE_BLEND);
-  return 1u;
+  SDL_SetTextureBlendMode(hypervisor->g_inverted_sprite, SDL_BLENDMODE_BLEND);
+  return inverted;
 }
 
 static uint8_t load_sounds(hypervisor_s* hypervisor) {
@@ -173,6 +263,51 @@ static uint8_t load_scorefile(hypervisor_s* hypervisor) {
   return 1u;
 }
 
+static void unload_joystick(hypervisor_s* hypervisor) {
+  LOG("%s", "Unloading joysticks");
+  if (hypervisor->joystick != NULL) {
+    SDL_Joystick* joystick = hypervisor->joystick;
+    if (SDL_JoystickGetAttached(joystick)) {
+      const char* joystick_name = SDL_JoystickName(joystick);
+      LOG("Closing joystick: %s", joystick_name);
+      SDL_JoystickClose(joystick);
+    }
+  }
+}
+
+static uint8_t load_joystick(hypervisor_s* hypervisor) {
+  LOG("%s", "Loading joystick");
+  unload_joystick(hypervisor);
+  int numb_joystick = SDL_NumJoysticks();
+  LOG("Found %d joystick(s)", numb_joystick);
+  if (numb_joystick == 0) {
+    LOG("%s", "No joysticks found");
+    return 0u;
+  }
+  if (numb_joystick < 0) {
+    LOG("Error while getting joysticks: %s", SDL_GetError());
+    return 0u;
+  }
+  for (int i = 0; i < numb_joystick; ++i) {
+    SDL_Joystick* joystick = SDL_JoystickOpen(i);
+    if (joystick == NULL) {
+      LOG("%s", "Could not load joystick for vibration");
+      continue;
+    }
+    const char* name = SDL_JoystickName(joystick);
+    if (name == NULL) {
+      name = "Unknown";
+    }
+    int rumble_status    = SDL_JoystickHasRumble(joystick);
+    hypervisor->joystick = joystick;
+    int event_state      = SDL_JoystickEventState(SDL_ENABLE);
+    LOG("Found controller: %s. Rumble detected: %i. Enable_event: %i", name, rumble_status, event_state);
+    return 1u;
+  }
+  hypervisor->joystick = NULL;
+  return 0u;
+}
+
 static uint8_t system_init(hypervisor_s* hypervisor) {
   struct version_s version           = {0, 0, 0};
   const unsigned char kVersionResult = dinorunner_getversion(&version);
@@ -180,7 +315,11 @@ static uint8_t system_init(hypervisor_s* hypervisor) {
     return 0u;
   }
   LOG("Compiled with libdinorunner v%hu.%hu.%hu", version.major, version.minor, version.patch);
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+  SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
+  SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1");
+  SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5, "1");
+  SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+  if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
     LOG("SDL could not initialize! SDL_Error: %s", SDL_GetError());
     return 0u;
   }
@@ -210,25 +349,39 @@ static uint8_t system_init(hypervisor_s* hypervisor) {
   SDL_initFramerate(&hypervisor->fps_manager);
   SDL_setFramerate(&hypervisor->fps_manager, kFrameRate);
   status = dinorunner_init(&hypervisor->dinorunner, &kGameDimension, hypervisor);
-  return 1u;
+  return status;
 }
 
 static uint8_t system_run(hypervisor_s* hypervisor) {
   uint8_t quit = 0u;
   SDL_Event event;
-  unsigned char game_result = 0u;
+  unsigned char game_result    = 0u;
+  const int16_t kAxisThreshold = 0xFFF;
   while (!quit) {
-    int status = 1;
-    SDL_RenderClear(hypervisor->g_renderer);
     while (SDL_PollEvent(&event) != 0) {
-      if (event.type == SDL_QUIT) {
-        quit = 1u;
+      switch (event.type) {
+        case SDL_QUIT:
+          quit = 1u;
+          break;
+        case SDL_JOYDEVICEADDED:
+        case SDL_JOYDEVICEREMOVED:
+          load_joystick(hypervisor);
+          break;
       }
     }
+    SDL_Joystick* joystick           = hypervisor->joystick;
+    uint8_t button_state             = SDL_JoystickGetButton(hypervisor->joystick, 2);
+    int16_t axis_state               = SDL_JoystickGetAxis(hypervisor->joystick, 1);
+    uint8_t hat_state                = SDL_JoystickGetHat(joystick, 0);
     const uint8_t* current_key_state = SDL_GetKeyboardState(NULL);
-    if (current_key_state[SDL_SCANCODE_UP] || current_key_state[SDL_SCANCODE_SPACE]) {
+    uint8_t up_pressed =
+        (current_key_state[SDL_SCANCODE_UP] || current_key_state[SDL_SCANCODE_SPACE] || (hat_state == SDL_HAT_UP)) ||
+        (button_state == 1u) || (axis_state < -kAxisThreshold);
+    uint8_t down_pressed = current_key_state[SDL_SCANCODE_DOWN] || event.type == SDL_JOYBUTTONDOWN ||
+                           (hat_state == SDL_HAT_DOWN) || (axis_state > kAxisThreshold);
+    if (up_pressed) {
       dinorunner_onkeyup(&hypervisor->dinorunner);
-    } else if (current_key_state[SDL_SCANCODE_DOWN]) {
+    } else if (down_pressed) {
       dinorunner_onkeydown(&hypervisor->dinorunner);
     } else if (current_key_state[SDL_SCANCODE_ESCAPE]) {
       quit = 1u;
@@ -239,7 +392,6 @@ static uint8_t system_run(hypervisor_s* hypervisor) {
     if (game_result != 1u) {
       quit = 1u;
     }
-    SDL_RenderPresent(hypervisor->g_renderer);
     SDL_framerateDelay(&hypervisor->fps_manager);
   }
   return 1u;
@@ -254,6 +406,7 @@ static uint8_t system_exit(hypervisor_s* hypervisor) {
     SDL_DestroyRenderer(hypervisor->g_renderer);
   }
   IMG_Quit();
+  unload_joystick(hypervisor);
   for (unsigned i = 0; i < sizeof(hypervisor->sound_effect) / sizeof(*hypervisor->sound_effect); ++i) {
     audio_s* sound_effect = &hypervisor->sound_effect[i];
     SDL_CloseAudioDevice(sound_effect->audio_device_id);
@@ -285,8 +438,11 @@ unsigned char dinorunner_writehighscore(unsigned long high_score, void* user_dat
     LOG("Could not write: %lu. %s", high_score, strerror(errno));
     return 0u;
   }
-  fflush(hypervisor->highscore_store);
-  LOG("Highscore: %lu successfully set!", high_score);
+  if (fflush(hypervisor->highscore_store) != 0) {
+    LOG("Could not flush data to file: %s", strerror(errno));
+    return 0u;
+  }
+  LOG("Highscore: %lu successfully written!", high_score);
   return 1u;
 }
 
@@ -309,7 +465,7 @@ unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_dat
     return 0u;
   }
   *high_score = stored_highscore;
-  LOG("Setting high score: %lu", stored_highscore);
+  LOG("High score: %lu successfully read", stored_highscore);
   return 1u;
 }
 
@@ -324,27 +480,54 @@ unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_dat
     return 0u;
   }
   int sound_index = sound - DINORUNNER_SOUND_BUTTON_PRESS;
-  if (sound < 0 || sound >= AUDIO_FILE_COUNT) {
+  if (sound_index < 0 || sound_index >= AUDIO_FILE_COUNT) {
     LOG("%s: %d", "Invalid sound play request", (int)sound);
     return 0u;
   }
-  int device_id = hypervisor->sound_effect[sound].audio_device_id;
-  SDL_QueueAudio(device_id, hypervisor->sound_effect[sound_index].pos, hypervisor->sound_effect[sound_index].length);
-  SDL_PauseAudioDevice(device_id, 0);
+  audio_s* audio = &hypervisor->sound_effect[sound_index];
+  SDL_QueueAudio(audio->audio_device_id, audio->pos, audio->length);
+  SDL_PauseAudioDevice(audio->audio_device_id, 0);
   return 1u;
 }
 
 unsigned char dinorunner_vibrate(unsigned duration, void* user_data) {
-  // pass
+  hypervisor_s* hypervisor = (hypervisor_s*)user_data;
+  if (hypervisor == NULL) {
+    return 0u;
+  }
+  if (hypervisor->joystick == NULL) {
+    return 0u;
+  }
+  if (duration == 0) {
+    return 1u;
+  }
+  int result = SDL_JoystickRumble(hypervisor->joystick, kRumbleFrequency, kRumbleFrequency, duration);
+  return result != -1;
+}
+
+unsigned char dinorunner_clearcanvas(void* user_data) {
+  hypervisor_s* hypervisor = (hypervisor_s*)user_data;
+  if (hypervisor == NULL) {
+    return 0u;
+  }
+  SDL_RenderPresent(hypervisor->g_renderer);
+  int clear_result = SDL_RenderClear(hypervisor->g_renderer);
+  // Using a shortcut to change the background color one frame too late.
+  unsigned char is_reversed, reversed_status;
+  reversed_status                = dinorunner_isinverted(&hypervisor->dinorunner, &is_reversed);
+  const uint8_t background_color = is_reversed ? 0x00 : 0xFF;
+  clear_result |= SDL_SetRenderDrawColor(hypervisor->g_renderer, background_color, background_color, background_color,
+                                         SDL_ALPHA_OPAQUE);
+  clear_result |= SDL_RenderFillRect(hypervisor->g_renderer, NULL);
+  if (clear_result != 0) {
+    LOG("Could not clear canvas: %s", SDL_GetError());
+    return 0u;
+  }
   return 1u;
 }
 
-unsigned char dinorunner_canvas_clear(void* user_data) {
-  // pass
-  return 1u;
-}
-
-unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, void* user_data) {
+unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, unsigned char opacity,
+                              void* user_data) {
   if (user_data == NULL) {
     return 0u;
   }
@@ -518,19 +701,11 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
           destination_rect.y);
       return 0u;
   }
-  unsigned char is_night_mode = 0;
-  dinorunner_isinverted(&hypervisor->dinorunner, &is_night_mode);
-  unsigned char opacity = 0;
-  dinorunner_opacity(&hypervisor->dinorunner, &opacity);
   SDL_SetTextureAlphaMod(hypervisor->g_sprite, opacity);
-  SDL_SetTextureAlphaMod(hypervisor->g_background, opacity);
-  if (is_night_mode) {
-    SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF - kBackgroundColor, 0xFF - kBackgroundColor,
-                           0xFF - kBackgroundColor, opacity);
-  } else {
-    SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor, opacity);
-  }
-  SDL_RenderCopy(hypervisor->g_renderer, hypervisor->g_sprite, sprite_rect, &destination_rect);
+  unsigned char is_inverted, inverted_result;
+  inverted_result             = dinorunner_isinverted(&hypervisor->dinorunner, &is_inverted);
+  SDL_Texture* source_texture = is_inverted ? hypervisor->g_inverted_sprite : hypervisor->g_sprite;
+  SDL_RenderCopy(hypervisor->g_renderer, source_texture, sprite_rect, &destination_rect);
   return 1u;
 }
 

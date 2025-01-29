@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(dinorunner-demos
-    VERSION 1.1.0
+    VERSION 1.2.0
     DESCRIPTION "Running examples of the Dinorunner libray"
     LANGUAGES C CXX)
 
@@ -25,7 +25,6 @@ include_directories(${SDL2_INCLUDE_DIRS})
 
 find_package(SDL2_IMAGE REQUIRED)
 include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
-
 
 PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
 PKG_SEARCH_MODULE(SDL2_gfx REQUIRED SDL2_gfx)

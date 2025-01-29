@@ -470,10 +470,12 @@ unsigned char dinorunner_vibrate(unsigned duration, void* user_data);
  * @param sprite Sprite to draw
  * @param pos Position on the canvas to draw on
  * @param user_data Given userdata
+ * @param opacity Sprite opacity: 0 (Not visible) -> 255 (Fully visible)
  * @return unsigned char 1 on succes, 0 otherwise as the user sees fit
  * @interface
  */
-unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, void* user_data);
+unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, unsigned char opacity,
+                              void* user_data);
 
 /**
  * @brief Get the game's running time
@@ -519,7 +521,7 @@ unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_dat
  * @param user_data Given user data
  * @return unsigned char 1 on success, 0 otherwise as the user sees fit
  */
-unsigned char dinorunner_canvas_clear(void* user_data);
+unsigned char dinorunner_clearcanvas(void* user_data);
 
 /**
  * @brief Game's request to log messages
@@ -550,15 +552,6 @@ unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dime
  * @return unsigned char 1 on success, 0 otherwise
  */
 unsigned char dinorunner_update(struct dinorunner_s* dinorunner);
-
-/**
- * @brief Get nightmode opacity
- * 
- * @param dinorunner Instance of the running dinorunner object
- * @param opacity Actual opacity into with the value should be stored
- * @return unsigned char 1 on success, 0 otherwise
- */
-unsigned char dinorunner_opacity(struct dinorunner_s* dinorunner, unsigned char* opacity);
 
 /**
  * @brief Get the inverted/night-mode state

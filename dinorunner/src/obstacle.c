@@ -148,7 +148,7 @@ static void obstacle_draw(const struct obstacle_s* obstacle, void* user_data) {
   }
   sprite                 = sprite + (obstacle->size - 1);
   const struct pos_s pos = {.x = obstacle->x_pos, .y = obstacle->y_pos};
-  dinorunner_draw(sprite, &pos, user_data);
+  dinorunner_draw(sprite, &pos, 0xFF, user_data);
 }
 
 void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e obstacle_type,
@@ -161,15 +161,13 @@ void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e 
   obstacle->current_frame = 0;
   obstacle->timer         = 0;
   obstacle->is_alive      = 1u;
-  // obstacle->remove        = 0u;
   dinorunner_obstacle_setconfig(obstacle, obstacle_type);
   if (obstacle->config.type_config != OBSTACLE_TYPE_PTERODACTYL) {
     obstacle->size = dinorunner_getrandomnumb(1, DINORUNNER_CONFIG_MAX_OBSTACLE_LENGTH);
   } else {
     obstacle->size = 1;
   }
-  obstacle->width = obstacle->config.width;
-  // obstacle->remove                     = 0u;
+  obstacle->width                      = obstacle->config.width;
   obstacle->y_pos                      = 0u;
   obstacle->x_pos                      = dimension->width + opt_x_offset;
   obstacle->gap                        = 0u;
@@ -197,7 +195,6 @@ void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e 
 }
 
 void dinorunner_obstacle_update(struct obstacle_s* obstacle, float delta_time, float speed, void* user_data) {
-  // if (!obstacle->remove) {
   if (obstacle->is_alive) {
     if (obstacle->config.speed_offset) {
       speed += obstacle->speed_offset;
@@ -213,7 +210,6 @@ void dinorunner_obstacle_update(struct obstacle_s* obstacle, float delta_time, f
     }
     obstacle_draw(obstacle, user_data);
     if (!obstacle_isvisible(obstacle)) {
-      // obstacle->remove = 1u;
       obstacle->is_alive = 0u;
     }
   }

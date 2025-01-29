@@ -21,19 +21,10 @@ static unsigned long distancemeter_readhighscore(void* user_data) {
   return 0u;
 }
 
-void dinorunner_distancemeter_writehighscore(struct distance_meter_s* distance_meter, unsigned distance,
-                                             void* user_data) {
-  unsigned char read_result = dinorunner_writehighscore(distance, user_data);
-  if (read_result != 0) {
-    if (distance_meter->high_score < distance) {
-      distance_meter->high_score = distance;
-    }
-  }
-}
-
 static unsigned long_to_digit(unsigned long number, char* data, unsigned max_size) {
   unsigned digit_parsed;
   unsigned long rest = number;
+  rest %= (unsigned long)dinorunner_pow(10, max_size);
   for (digit_parsed = 0; digit_parsed < max_size; ++digit_parsed) {
     unsigned divisor = dinorunner_pow(10, (max_size - digit_parsed - 1));
     int current      = rest / divisor;
@@ -54,6 +45,16 @@ static void dinorunner_distancemeter_calcxpos(struct distance_meter_s* distance_
   distance_meter->x = (int)canvas_width - (int)((distance_meter->width * distance_meter->max_score_units + 1)) * 2;
 }
 
+void dinorunner_distancemeter_writehighscore(struct distance_meter_s* distance_meter, unsigned distance,
+                                             void* user_data) {
+  unsigned char read_result = dinorunner_writehighscore(distance, user_data);
+  if (read_result != 0) {
+    if (distance_meter->high_score < distance) {
+      distance_meter->high_score = distance;
+    }
+  }
+}
+
 unsigned char dinorunner_distancemeter_draw(const struct distance_meter_s* distance_meter, unsigned digit_pos,
                                             unsigned value, unsigned short opt_high, void* user_data) {
   TREX_UNUSED(digit_pos);
@@ -62,12 +63,12 @@ unsigned char dinorunner_distancemeter_draw(const struct distance_meter_s* dista
   if (opt_high) {
     struct pos_s pos = {.x = distance_meter->x - distance_meter->width * distance_meter->max_score_units,
                         .y = distance_meter->y};
-    dinorunner_draw(DINORUNNER_SPRITE_HI, &pos, user_data);
+    dinorunner_draw(DINORUNNER_SPRITE_HI, &pos, 0xFF, user_data);
     unsigned parsed = long_to_digit(distance_meter->high_score, ptr, distance_meter->max_score_units);
     for (unsigned counter = 0; counter < parsed; ++counter) {
       struct pos_s pos = {.x = distance_meter->x - distance_meter->width * 2 + distance_meter->width * counter,
                           .y = distance_meter->y};
-      dinorunner_draw(DINORUNNER_SPRITE_0 + (int)(ptr[counter] - '0'), &pos, user_data);
+      dinorunner_draw(DINORUNNER_SPRITE_0 + (int)(ptr[counter] - '0'), &pos, 0xFF, user_data);
     }
   } else {
     unsigned parsed = long_to_digit(value, ptr, distance_meter->max_score_units);
@@ -75,13 +76,14 @@ unsigned char dinorunner_distancemeter_draw(const struct distance_meter_s* dista
       struct pos_s pos = {.x = distance_meter->x + distance_meter->width * 2 + distance_meter->width * counter +
                                distance_meter->width * 2,
                           .y = distance_meter->y};
-      dinorunner_draw(DINORUNNER_SPRITE_0 + (int)(ptr[counter] - '0'), &pos, user_data);
+      dinorunner_draw(DINORUNNER_SPRITE_0 + (int)(ptr[counter] - '0'), &pos, 0xFF, user_data);
     }
   }
   return 1u;
 }
 
-void dinorunner_distancemeter_drawhighscore(const struct distance_meter_s* distance_meter, void* user_data) {
+static inline void dinorunner_distancemeter_drawhighscore(const struct distance_meter_s* distance_meter,
+                                                          void* user_data) {
   dinorunner_distancemeter_draw(distance_meter, 0, distance_meter->high_score, 1, user_data);
 }
 

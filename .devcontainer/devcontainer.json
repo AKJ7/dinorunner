@@ -21,7 +21,8 @@
 		"69:69"
 	],
 	"mounts": [
-		"type=bind,source=/dev/bus/usb,target=/dev/bus/usb", // Make Debugger available. (ATM the docker image only has the stlink drivers)
+		"type=bind,source=/dev/bus/usb,target=/dev/bus/usb", // Make Debugger available.
+		"type=bind,source=/dev/input,target=/dev/input", // Make controllers available,
 		"source=${localEnv:HOME}/.ssh,target=/home/$(whoami)/.ssh,type=bind,consistency=cached", // Make ssh key available
 		"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached", // Mount graphic inside container to run GUIs
 		"source=/dev/dri,target=/dev/dri,type=bind,consistency=cached", // Mount graphic card driver inside container
