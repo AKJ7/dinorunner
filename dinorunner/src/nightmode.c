@@ -18,16 +18,22 @@ static float dinorunner_nightmode_updateXPos(float current_pos, float speed, uns
 }
 
 static unsigned char dinorunner_nightmode_draw(const struct nightmode_s* nightmode, void* user_data) {
+  int opacity = nightmode->opacity * 0xFF;
+  if (opacity < 0) {
+    opacity = 0;
+  } else if (opacity > 0xFF) {
+    opacity = 0xFF;
+  }
   if (nightmode->draw_stars) {
     for (int i = 0; i < DINORUNNER_CONFIG_NIGHTMODE_NUMBSTARS; ++i) {
       struct pos_s pos              = {.x = dinorunner_roundf(nightmode->stars[i].x), nightmode->stars[i].y};
       enum dinorunner_sprite_e star = DINORUNNER_SPRITE_STAR1 + i;
-      dinorunner_draw(star, &pos, user_data);
+      dinorunner_draw(star, &pos, (unsigned char)opacity, user_data);
     }
   }
   const struct pos_s pos        = {.x = dinorunner_roundf(nightmode->x_pos), nightmode->y_pos};
   enum dinorunner_sprite_e moon = DINORUNNER_SPRITE_MOON1 + nightmode->current_phase;
-  dinorunner_draw(moon, &pos, user_data);
+  dinorunner_draw(moon, &pos, (unsigned char)opacity, user_data);
   return 1u;
 }
 
@@ -45,7 +51,7 @@ void dinorunner_nightmode_init(struct nightmode_s* nightmode, unsigned container
   nightmode->y_pos         = 30;
   nightmode->current_phase = 0u;
   nightmode->opacity       = 0;
-  nightmode->draw_stars = 0;
+  nightmode->draw_stars    = 0;
   dinorunner_nightmode_placestars(nightmode, container_width);
 }
 
@@ -57,12 +63,12 @@ unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigne
       nightmode->current_phase = 0;
     }
   }
-  if (show_nightmode && (nightmode->opacity < 1.0f || nightmode->opacity == 0.0f)) {
-    nightmode->opacity += DINORUNNER_CONFIG_NIGHTMODE_FADESPEED;
-    nightmode->opacity = (nightmode->opacity > 1.0f) ? 1.0f : nightmode->opacity;
+  if (show_nightmode) {
+    if ((nightmode->opacity < 1.0f || nightmode->opacity == 0.0f)) {
+      nightmode->opacity += DINORUNNER_CONFIG_NIGHTMODE_FADESPEED;
+    }
   } else if (nightmode->opacity > 0.0f) {
     nightmode->opacity -= DINORUNNER_CONFIG_NIGHTMODE_FADESPEED;
-    nightmode->opacity = nightmode->opacity < 0.0f ? 0.0f : nightmode->opacity;
   }
   if (nightmode->opacity > 0) {
     nightmode->x_pos =

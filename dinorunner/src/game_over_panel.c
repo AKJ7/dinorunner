@@ -24,8 +24,8 @@ unsigned dinorunner_gameoverpanel_draw(struct gameoverpanel_s* gameoverpanel, vo
   int restart_target_x             = dinorunner_roundf(center_x - ((float)restart_source_width / 2));
   int restart_target_y             = gameoverpanel->canvas_dimension.height / 2;
   const struct pos_s gameover_dest = {.x = text_target_x, .y = text_target_y};
-  unsigned char res                = dinorunner_draw(DINORUNNER_SPRITE_GAMEOVER, &gameover_dest, user_data);
+  unsigned char res                = dinorunner_draw(DINORUNNER_SPRITE_GAMEOVER, &gameover_dest, 0xFF, user_data);
   const struct pos_s restart_dest  = {.x = restart_target_x, .y = restart_target_y};
-  res &= dinorunner_draw(DINORUNNER_SPRITE_RESTART, &restart_dest, user_data);
+  res &= dinorunner_draw(DINORUNNER_SPRITE_RESTART, &restart_dest, 0xFF, user_data);
   return res;
 }

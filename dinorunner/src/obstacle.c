@@ -148,7 +148,7 @@ static void obstacle_draw(const struct obstacle_s* obstacle, void* user_data) {
   }
   sprite                 = sprite + (obstacle->size - 1);
   const struct pos_s pos = {.x = obstacle->x_pos, .y = obstacle->y_pos};
-  dinorunner_draw(sprite, &pos, user_data);
+  dinorunner_draw(sprite, &pos, 0xFF, user_data);
 }
 
 void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e obstacle_type,

@@ -183,7 +183,7 @@ void dinorunner_trex_updatejump(struct trex_s* trex, float delta_time, void* use
 
 unsigned char dinorunner_trex_draw(struct trex_s* trex, enum dinorunner_sprite_e sprite, void* user_data) {
   struct pos_s pos     = {.x = trex->x_pos, .y = trex->y_pos};
-  unsigned char result = dinorunner_draw(sprite, &pos, user_data);
+  unsigned char result = dinorunner_draw(sprite, &pos, 0xFF, user_data);
   return result;
 }
 

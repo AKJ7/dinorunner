@@ -43,8 +43,8 @@ void dinorunner_horizonline_update(struct horizonline_s* horizonline, float delt
   }
   const struct pos_s pos1 = {.x = horizonline->x_pos[0], horizonline->y_pos};
   const struct pos_s pos2 = {.x = horizonline->x_pos[1], horizonline->y_pos};
-  dinorunner_draw(horizonline->sprite[0], &pos1, user_data);
-  dinorunner_draw(horizonline->sprite[1], &pos2, user_data);
+  dinorunner_draw(horizonline->sprite[0], &pos1, 0xFF, user_data);
+  dinorunner_draw(horizonline->sprite[1], &pos2, 0xFF, user_data);
 }
 
 void dinorunner_horizonline_init(struct horizonline_s* horizoneline, const struct dimension_s* src_dimension) {
