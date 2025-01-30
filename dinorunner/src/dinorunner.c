@@ -8,7 +8,7 @@
 
 #include "dinorunner.h"
 
-struct dimension_s text_dimension = {.width = 10, .height = 13};
+static const struct dimension_s text_dimension = {.width = 10, .height = 13};
 
 static void dinorunner_invert(struct dinorunner_s* dinorunner, unsigned char reset) {
   if (reset) {

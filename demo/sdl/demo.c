@@ -402,6 +402,12 @@ static uint8_t system_exit(hypervisor_s* hypervisor) {
   if (hypervisor->g_window) {
     SDL_DestroyWindow(hypervisor->g_window);
   }
+  if (hypervisor->g_sprite != NULL) {
+      SDL_DestroyTexture(hypervisor->g_sprite);
+  }
+  if (hypervisor->g_inverted_sprite != NULL) {
+      SDL_DestroyTexture(hypervisor->g_inverted_sprite);
+  }
   if (hypervisor->g_renderer) {
     SDL_DestroyRenderer(hypervisor->g_renderer);
   }
@@ -701,10 +707,10 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
           destination_rect.y);
       return 0u;
   }
-  SDL_SetTextureAlphaMod(hypervisor->g_sprite, opacity);
   unsigned char is_inverted, inverted_result;
   inverted_result             = dinorunner_isinverted(&hypervisor->dinorunner, &is_inverted);
   SDL_Texture* source_texture = is_inverted ? hypervisor->g_inverted_sprite : hypervisor->g_sprite;
+  SDL_SetTextureAlphaMod(source_texture, opacity);
   SDL_RenderCopy(hypervisor->g_renderer, source_texture, sprite_rect, &destination_rect);
   return 1u;
 }
