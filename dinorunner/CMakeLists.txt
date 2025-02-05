@@ -73,7 +73,6 @@ install(TARGETS dinorunner_static
 )
 
 install(FILES include/dinorunner.h
-    "${CMAKE_CURRENT_BINARY_DIR}/dinorunner_export.h"
     DESTINATION include
     COMPONENT Devel)
 

@@ -63,6 +63,7 @@ static const uint32_t kFrameRate             = 60u;
 static const uint8_t kBackgroundColor        = 0xF2;
 static const uint16_t kRumbleFrequency       = 0xFFFF;
 static const unsigned char kNightModePhases[DINORUNNER_CONFIG_NIGHTMODE_MOONPHASES] = {140, 120, 100, 60, 40, 20, 0};
+static const uint8_t kFadeSpeed                                                     = 10u;
 
 typedef struct audio_s {
   uint8_t* pos;
@@ -82,6 +83,7 @@ typedef struct hypervisor_s {
   SDL_Texture* g_inverted_sprite;
   SDL_Texture* g_background;
   SDL_Joystick* joystick;
+  int16_t nightmode_interpol;
 } hypervisor_s;
 
 static uint8_t system_preinit(hypervisor_s* hypervisor);
@@ -99,13 +101,14 @@ int main(int argc, char** argv) {
 }
 
 static uint8_t system_preinit(hypervisor_s* hypervisor) {
-  hypervisor->highscore_store   = NULL;
-  hypervisor->g_window          = NULL;
-  hypervisor->g_renderer        = NULL;
-  hypervisor->g_sprite          = NULL;
-  hypervisor->g_inverted_sprite = NULL;
-  hypervisor->g_background      = NULL;
-  hypervisor->joystick          = NULL;
+  hypervisor->highscore_store    = NULL;
+  hypervisor->g_window           = NULL;
+  hypervisor->g_renderer         = NULL;
+  hypervisor->g_sprite           = NULL;
+  hypervisor->g_inverted_sprite  = NULL;
+  hypervisor->g_background       = NULL;
+  hypervisor->joystick           = NULL;
+  hypervisor->nightmode_interpol = 0xFF;
   return 1u;
 }
 
@@ -403,10 +406,10 @@ static uint8_t system_exit(hypervisor_s* hypervisor) {
     SDL_DestroyWindow(hypervisor->g_window);
   }
   if (hypervisor->g_sprite != NULL) {
-      SDL_DestroyTexture(hypervisor->g_sprite);
+    SDL_DestroyTexture(hypervisor->g_sprite);
   }
   if (hypervisor->g_inverted_sprite != NULL) {
-      SDL_DestroyTexture(hypervisor->g_inverted_sprite);
+    SDL_DestroyTexture(hypervisor->g_inverted_sprite);
   }
   if (hypervisor->g_renderer) {
     SDL_DestroyRenderer(hypervisor->g_renderer);
@@ -518,10 +521,15 @@ unsigned char dinorunner_clearcanvas(void* user_data) {
   }
   SDL_RenderPresent(hypervisor->g_renderer);
   int clear_result = SDL_RenderClear(hypervisor->g_renderer);
-  // Using a shortcut to change the background color one frame too late.
   unsigned char is_reversed, reversed_status;
-  reversed_status                = dinorunner_isinverted(&hypervisor->dinorunner, &is_reversed);
-  const uint8_t background_color = is_reversed ? 0x00 : 0xFF;
+  reversed_status = dinorunner_isinverted(&hypervisor->dinorunner, &is_reversed);
+  hypervisor->nightmode_interpol += (is_reversed ? -1 : 1) * kFadeSpeed;
+  if (hypervisor->nightmode_interpol > 0xFF) {
+    hypervisor->nightmode_interpol = 0xFF;
+  } else if (hypervisor->nightmode_interpol < 0) {
+    hypervisor->nightmode_interpol = 0x00;
+  }
+  uint8_t background_color = (uint8_t)hypervisor->nightmode_interpol;
   clear_result |= SDL_SetRenderDrawColor(hypervisor->g_renderer, background_color, background_color, background_color,
                                          SDL_ALPHA_OPAQUE);
   clear_result |= SDL_RenderFillRect(hypervisor->g_renderer, NULL);
