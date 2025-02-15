@@ -508,7 +508,9 @@ unsigned char dinorunner_writehighscore(unsigned long high_score, void* user_dat
 /**
  * @brief Game's request to read the current highscore
  * 
- * @param high_score Pointer to the variable location to store the value into
+ * @param high_score Pointer to the variable location to store the value into.
+ * When the value 0 is written into the variable, no highscore is shown until 
+ * a new one is set
  * @param user_data Given user data
  * @return unsigned char 1 on success, 0 otherwise as the user sees fit
  * @interface
@@ -560,7 +562,16 @@ unsigned char dinorunner_update(struct dinorunner_s* dinorunner);
  * @param night_mode Variable into which to store the actual nightmode state
  * @return unsigned char 1 on success, 0 otherwise
  */
-unsigned char dinorunner_isinverted(struct dinorunner_s* dinorunner, unsigned char* night_mode);
+unsigned char dinorunner_isinverted(const struct dinorunner_s* dinorunner, unsigned char* night_mode);
+
+/**
+ * @brief Check whether the intro is done playing and the game is active and running
+ * 
+ * @param dinorunner Instance of the running dinorunner object
+ * @param activation_status Variable into which to store the actual active status
+ * @return unsigned char 1 on success, 0 otherwise
+ */
+unsigned char dinorunner_isalive(const struct dinorunner_s* dinorunner, unsigned char* activation_status);
 
 /**
  * @brief Trigger the "key up" input
@@ -592,13 +603,15 @@ void dinorunner_cloud_init(struct cloud_s* cloud, unsigned container_width);
 unsigned char dinorunner_cloud_update(struct cloud_s* cloud, float speed, void* user_data);
 
 unsigned char dinorunner_horizon_init(struct horizon_s* horizon, const struct dimension_s* dimension,
-                                      float gap_coefficient);
+                                      float gap_coefficient, void* user_data);
 unsigned char dinorunner_horizon_update(struct horizon_s* horizon, float delta_time, float current_speed,
                                         unsigned char update_obstacles_request, unsigned char show_night_mode,
                                         void* user_data);
 void dinorunner_horizon_reset(struct horizon_s* horizon, void* user_data);
 
-void dinorunner_horizonline_init(struct horizonline_s* horizoneline, const struct dimension_s* src_dimension);
+void dinorunner_horizonline_init(struct horizonline_s* horizoneline, const struct dimension_s* src_dimension,
+                                 void* user_data);
+unsigned char dinorunner_horizonline_draw(const struct horizonline_s* horizonline, void* user_data);
 void dinorunner_horizonline_reset(struct horizonline_s* horizonline);
 void dinorunner_horizonline_update(struct horizonline_s* horizonline, float delta_time, float speed, void* user_data);
 

@@ -84,6 +84,7 @@ typedef struct hypervisor_s {
   SDL_Texture* g_background;
   SDL_Joystick* joystick;
   int16_t nightmode_interpol;
+  int intro_clip_width;
 } hypervisor_s;
 
 static uint8_t system_preinit(hypervisor_s* hypervisor);
@@ -109,6 +110,7 @@ static uint8_t system_preinit(hypervisor_s* hypervisor) {
   hypervisor->g_background       = NULL;
   hypervisor->joystick           = NULL;
   hypervisor->nightmode_interpol = 0xFF;
+  hypervisor->intro_clip_width   = kTrexSpriteStanding1.w;
   return 1u;
 }
 
@@ -715,9 +717,17 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
           destination_rect.y);
       return 0u;
   }
-  unsigned char is_inverted, inverted_result;
+  unsigned char is_inverted, inverted_result, is_alive;
   inverted_result             = dinorunner_isinverted(&hypervisor->dinorunner, &is_inverted);
   SDL_Texture* source_texture = is_inverted ? hypervisor->g_inverted_sprite : hypervisor->g_sprite;
+  SDL_Rect clip_rect = {.x = kPadding, .y = kPadding, .w = hypervisor->intro_clip_width, .h = kGameDimension.height};
+  dinorunner_isalive(&hypervisor->dinorunner, &is_alive);
+  if (is_alive) {
+    if (hypervisor->intro_clip_width < kGameDimension.width) {
+      hypervisor->intro_clip_width += (unsigned)(2 * ((float)kFrameRate / DINORUNNER_CONFIG_CORE_FPS));
+    }
+  }
+  SDL_RenderSetClipRect(hypervisor->g_renderer, &clip_rect);
   SDL_SetTextureAlphaMod(source_texture, opacity);
   SDL_RenderCopy(hypervisor->g_renderer, source_texture, sprite_rect, &destination_rect);
   return 1u;
