@@ -37,10 +37,10 @@ unsigned char dinorunner_log(void* user_data, const char* format, ...);
 
 ## Demo  
 <p align="center">
-  <img src="https://github.com/AKJ7/dinorunner/blob/9f8ccd088d952062bda3dfc1b6aff48846028be9/assets/demo.gif" />
+  <img src="https://github.com/AKJ7/dinorunner/blob/2ed5e2c8f2f17a2c68b463530af4f231d37eb69e/assets/dinorunner_normal.gif" />
 </p>   
 <p align="center">
-  <img src="https://github.com/AKJ7/dinorunner/blob/fd7c8ae9c22e98f57daca17f15a53548cd8a651f/assets/demo_nightmode.gif" />
+  <img src="https://github.com/AKJ7/dinorunner/blob/2ed5e2c8f2f17a2c68b463530af4f231d37eb69e/assets/dinorunner_nightmode.gif" />
 </p>
 
 ## Usage  
