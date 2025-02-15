@@ -9,7 +9,7 @@
 #include "dinorunner.h"
 
 static const unsigned char kVersionMajor = 1;
-static const unsigned char kVersionMinor = 2;
+static const unsigned char kVersionMinor = 3;
 static const unsigned char kVersionPatch = 0;
 
 unsigned char dinorunner_getversion(struct version_s* version) {
