@@ -121,12 +121,33 @@
                 "Build Library"
             ]
         },
+        {
+            "label": "Create .gif",
+            "type": "shell",
+            "command": "ffmpeg -i ${input:recording_file_path} -vf scale=512:-1 -r 10 -f image2pipe -vcodec ppm - | convert -delay 10 -loop 0 - gif:- | convert -layers Optimize - demo.gif",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "Create .gif demo from .mp4 recording",
+            "icon": {
+                "id": "device-camera-video",
+                "color": "terminal.ansiCyan"
+            },
+        },
     ],
     "inputs": [
         {
             "id": "disassemble_file_dest",
             "description": "Input path of the library disassemble",
             "default": "./disassembled.s",
+            "type": "promptString"
+        },
+        {
+            "id": "recording_file_path",
+            "description": "Input path of the video recording",
+            "default": "assets/demo.mp4",
             "type": "promptString"
         }
     ]
