@@ -37,10 +37,10 @@ unsigned char dinorunner_log(void* user_data, const char* format, ...);
 
 ## Demo  
 <p align="center">
-  <img src="https://github.com/AKJ7/dinorunner/blob/9f8ccd088d952062bda3dfc1b6aff48846028be9/assets/demo.gif" />
+  <img src="https://github.com/AKJ7/dinorunner/blob/2ed5e2c8f2f17a2c68b463530af4f231d37eb69e/assets/dinorunner_normal.gif" />
 </p>   
 <p align="center">
-  <img src="https://github.com/AKJ7/dinorunner/blob/fd7c8ae9c22e98f57daca17f15a53548cd8a651f/assets/demo_nightmode.gif" />
+  <img src="https://github.com/AKJ7/dinorunner/blob/2ed5e2c8f2f17a2c68b463530af4f231d37eb69e/assets/dinorunner_nightmode.gif" />
 </p>
 
 ## Usage  
@@ -79,7 +79,8 @@ The following functions can be used to interact with the dinorunner engine. See 
 unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dimension_s* dimension, void* user_data);
 unsigned char dinorunner_update(struct dinorunner_s* dinorunner);
 unsigned char dinorunner_getversion(struct version_s* version);
-unsigned char dinorunner_isinverted(struct dinorunner_s* dinorunner, unsigned char* night_mode);
+unsigned char dinorunner_isinverted(const struct dinorunner_s* dinorunner, unsigned char* night_mode);
+unsigned char dinorunner_isalive(const struct dinorunner_s* dinorunner, unsigned char* activation_status);
 void dinorunner_onkeyup(struct dinorunner_s* dinorunner);
 void dinorunner_onkeydown(struct dinorunner_s* dinorunner);
 void dinorunner_onkeynone(struct dinorunner_s* dinorunner);

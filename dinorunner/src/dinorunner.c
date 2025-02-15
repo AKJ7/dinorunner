@@ -8,7 +8,7 @@
 
 #include "dinorunner.h"
 
-struct dimension_s text_dimension = {.width = 10, .height = 13};
+static const struct dimension_s text_dimension = {.width = 10, .height = 13};
 
 static void dinorunner_invert(struct dinorunner_s* dinorunner, unsigned char reset) {
   if (reset) {
@@ -38,8 +38,8 @@ unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dime
   dinorunner->playing_intro    = 0u;
   dinorunner->user_data        = user_data;
   dinorunner->inverted         = 0u;
-  res &=
-      dinorunner_horizon_init(&dinorunner->horizon, &dinorunner->dimension, -DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT);
+  res &= dinorunner_horizon_init(&dinorunner->horizon, &dinorunner->dimension,
+                                 -DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT, dinorunner->user_data);
   res &= dinorunner_trex_init(&dinorunner->trex, dimension->width, dimension->height, dinorunner->user_data);
   res &= dinorunner_gameoverpanel_init(&dinorunner->gameoverpanel, dimension);
   res &= dinorunner_clearcanvas(dinorunner->user_data);
@@ -248,8 +248,12 @@ unsigned char dinorunner_update(struct dinorunner_s* dinorunner) {
     dinorunner_trex_update(&dinorunner->trex, delta_time, TREX_STATUS_NONE, dinorunner->user_data);
   } else if ((!dinorunner->activated) && (dinorunner->trex.blink_count < DINORUNNER_CONFIG_MAX_BLINK_COUNT)) {
     dinorunner_trex_update(&dinorunner->trex, delta_time, TREX_STATUS_NONE, dinorunner->user_data);
+    dinorunner_horizonline_draw(&dinorunner->horizon.horizon_line, dinorunner->user_data);
+    dinorunner_clearcanvas(dinorunner->user_data);
   } else {
     dinorunner_trex_update(&dinorunner->trex, delta_time, TREX_STATUS_WAITING, dinorunner->user_data);
+    dinorunner_horizonline_draw(&dinorunner->horizon.horizon_line, dinorunner->user_data);
+    dinorunner_clearcanvas(dinorunner->user_data);
   }
   return 1u;
 }
@@ -285,7 +289,12 @@ void dinorunner_onkeynone(struct dinorunner_s* dinorunner) {
   dinorunner_trex_endjump(&dinorunner->trex);
 }
 
-unsigned char dinorunner_isinverted(struct dinorunner_s* dinorunner, unsigned char* night_mode) {
+unsigned char dinorunner_isinverted(const struct dinorunner_s* dinorunner, unsigned char* night_mode) {
   *night_mode = dinorunner->inverted;
+  return 1u;
+}
+
+unsigned char dinorunner_isalive(const struct dinorunner_s* dinorunner, unsigned char* activation_status) {
+  *activation_status = !dinorunner->playing_intro && dinorunner->activated;
   return 1u;
 }

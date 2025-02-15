@@ -49,12 +49,12 @@ static unsigned char duplicate_obstacle_check(const struct horizon_s* horizon,
 }
 
 unsigned char dinorunner_horizon_init(struct horizon_s* horizon, const struct dimension_s* dimension,
-                                      float gap_coefficient) {
+                                      float gap_coefficient, void* user_data) {
   horizon->cloud_speed     = DINORUNNER_CONFIG_CLOUD_SPEED;
   horizon->first           = 1u;
   horizon->dimension       = *dimension;
   horizon->gap_coefficient = gap_coefficient;
-  dinorunner_horizonline_init(&horizon->horizon_line, dimension);
+  dinorunner_horizonline_init(&horizon->horizon_line, dimension, user_data);
   dinorunner_nightmode_init(&horizon->nightmode, horizon->dimension.width);
   for (unsigned i = 0; i < DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_COUNT; ++i) {
     horizon->obstacle_history[i]   = OBSTACLE_TYPE_NONE;
