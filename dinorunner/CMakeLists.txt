@@ -20,9 +20,13 @@ else()
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+SET(CMAKE_C_STANDARD_LIBRARIES "")
+SET(CMAKE_C_STANDARD_LIBRARIES_INIT "")
 SET(CMAKE_CXX_STANDARD_LIBRARIES "")
 SET(CMAKE_CXX_STANDARD_LIBRARIES_INIT "")
 SET(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_C_IMPLICIT_LINK_LIBRARIES "")
+set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "")
 set(CMAKE_CXX_IMPLICIT_LINK_LIBRARIES "")
 set(CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES "")
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR}/dinorunner
@@ -40,6 +44,8 @@ add_library(dinorunner_shared SHARED ${DINORUNNER_CORE_FILES})
 add_library(dinorunner_static STATIC ${DINORUNNER_CORE_FILES})
 target_include_directories(dinorunner_shared PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 target_include_directories(dinorunner_static PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+target_link_options(dinorunner_shared PUBLIC "-nostdlib")
+target_link_options(dinorunner_static PUBLIC "-nostdlib")
 
 set_target_properties(dinorunner_shared
     PROPERTIES OUTPUT_NAME dinorunner
