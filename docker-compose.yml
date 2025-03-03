@@ -17,7 +17,7 @@ services:
     volumes:
       - /dev/bus/usb:/dev/bus/usb
       - /dev/input:/dev/input
-      - $HOME/.ssh:/home/dinorunner/.ssh
+      - $HOME/.ssh:/home/dino_runner/.ssh
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /dev/dri:/dev/dri 
       - $XDG_RUNTIME_DIR/pulse/native:$XDG_RUNTIME_DIR/pulse/native

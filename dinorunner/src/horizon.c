@@ -43,7 +43,7 @@ static unsigned char duplicate_obstacle_check(const struct horizon_s* horizon,
   unsigned duplicate_count                  = 0;
   const unsigned number_of_obstacle_history = get_active_obstacle_history(horizon);
   for (unsigned i = 0u; i < number_of_obstacle_history; ++i) {
-    duplicate_count = (horizon->obstacle_history[i] == next_obstacle_type);
+    duplicate_count += (horizon->obstacle_history[i] == next_obstacle_type);
   }
   return duplicate_count >= DINORUNNER_CONFIG_OBSTACLE_MAX_OBSTACLE_DUPLICATION;
 }

@@ -77,17 +77,6 @@ static inline void dinorunner_trex_setjumpvelocity(struct trex_s* trex, int sett
   trex->drop_velocity         = -setting / 2.0f;
 }
 
-static void trex_reset(struct trex_s* trex, void* user_data) {
-  trex->y_pos         = trex->ground_y_pos;
-  trex->jump_velocity = 0;
-  trex->jumping       = 0u;
-  trex->ducking       = 0u;
-  dinorunner_trex_update(trex, 0, TREX_STATUS_RUNNING, user_data);
-  trex->mid_air    = 0u;
-  trex->speed_drop = 0u;
-  trex->jump_count = 0u;
-}
-
 void dinorunner_trex_setduck(struct trex_s* trex, unsigned char is_ducking, void* user_data) {
   if (is_ducking && trex->status != TREX_STATUS_DUCKING) {
     dinorunner_trex_update(trex, 0, TREX_STATUS_DUCKING, user_data);
@@ -135,10 +124,10 @@ void dinorunner_trex_reset(struct trex_s* trex, void* user_data) {
   trex->jump_velocity = 0u;
   trex->jumping       = 0u;
   trex->ducking       = 0u;
-  trex->mid_air       = 0u;
-  trex->speed_drop    = 0u;
-  trex->jump_count    = 0u;
   dinorunner_trex_update(trex, 0, TREX_STATUS_RUNNING, user_data);
+  trex->mid_air    = 0u;
+  trex->speed_drop = 0u;
+  trex->jump_count = 0u;
 }
 
 void dinorunner_trex_startjump(struct trex_s* trex, float speed, void* user_data) {
@@ -175,7 +164,7 @@ void dinorunner_trex_updatejump(struct trex_s* trex, float delta_time, void* use
     dinorunner_trex_endjump(trex);
   }
   if (trex->y_pos > trex->ground_y_pos) {
-    trex_reset(trex, user_data);
+    dinorunner_trex_reset(trex, user_data);
     trex->jump_count++;
   }
   dinorunner_trex_update(trex, delta_time, TREX_STATUS_NONE, user_data);
@@ -196,7 +185,7 @@ unsigned char dinorunner_trex_init(struct trex_s* trex, unsigned container_width
   trex->blink_count          = 0;
   trex->animation_start_time = 0;
   trex->timer                = 0;
-  trex->ms_per_frame         = 1000.0 / DINORUNNER_CONFIG_CORE_FPS;
+  trex->ms_per_frame         = 1000.0f / DINORUNNER_CONFIG_CORE_FPS;
   trex->status               = TREX_STATUS_WAITING;
   trex->jumping              = 0u;
   trex->ducking              = 0u;

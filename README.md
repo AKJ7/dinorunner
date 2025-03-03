@@ -4,7 +4,7 @@ Chrome's Dinorunner game as a standalone C library.
 
 
 ## Description  
-This project contains a port of the famous Chrome's Dinosaur Game written in C.  
+This project contains a port of the famous Chrome's Dinosaur Game written in C, C++.
 
 It is designed to be used as a configurable backend library accessable to a wide range of programming languages (using i.e. CFFIs) and hardware architectures.
 

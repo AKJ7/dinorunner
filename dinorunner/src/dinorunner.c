@@ -42,7 +42,6 @@ unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dime
                                  -DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT, dinorunner->user_data);
   res &= dinorunner_trex_init(&dinorunner->trex, dimension->width, dimension->height, dinorunner->user_data);
   res &= dinorunner_gameoverpanel_init(&dinorunner->gameoverpanel, dimension);
-  res &= dinorunner_clearcanvas(dinorunner->user_data);
   res &= dinorunner_distancemeter_init(&dinorunner->distance_meter, &text_dimension, dimension->width,
                                        dinorunner->user_data);
   return res;
@@ -59,13 +58,12 @@ unsigned char dinorunner_startgame(struct dinorunner_s* dinorunner) {
 unsigned char dinorunner_restart(struct dinorunner_s* dinorunner) {
   dinorunner->play_count++;
   dinorunner->running_time  = 0u;
-  dinorunner->playing       = 0u;
+  dinorunner->playing       = 1u;
   dinorunner->distance_ran  = 0u;
   dinorunner->crashed       = 0u;
   dinorunner->current_speed = DINORUNNER_CONFIG_SPEED;
   // set_speed(DINORUNNER_CONFIG_SPEED);
   dinorunner->time = dinorunner_gettimestamp(dinorunner->user_data);
-  dinorunner_clearcanvas(dinorunner->user_data);
   dinorunner_distancemeter_reset(&dinorunner->distance_meter, dinorunner->distance_meter.high_score,
                                  dinorunner->user_data);
   dinorunner_horizon_reset(&dinorunner->horizon, dinorunner->user_data);
@@ -94,26 +92,19 @@ void dinorunner_stop(struct dinorunner_s* dinorunner) {
 }
 
 static void dinorunner_gameover(struct dinorunner_s* dinorunner) {
-  if (dinorunner->playing) {
-    dinorunner_playsound(DINORUNNER_SOUND_HIT, dinorunner->user_data);
-    dinorunner_vibrate(200, dinorunner->user_data);
-  }
+  dinorunner_playsound(DINORUNNER_SOUND_HIT, dinorunner->user_data);
+  dinorunner_vibrate(200, dinorunner->user_data);
   dinorunner_stop(dinorunner);
   dinorunner->crashed                    = 1u;
   dinorunner->distance_meter.achievement = 0u;
   dinorunner_trex_update(&dinorunner->trex, 100, TREX_STATUS_CRASHED, dinorunner->user_data);
-  dinorunner_gameoverpanel_draw(&dinorunner->gameoverpanel, dinorunner->user_data);
   unsigned last_score = dinorunner_distancemeter_getactualdistance(dinorunner->distance_ran);
   if (last_score > dinorunner->distance_meter.high_score) {
     dinorunner->distance_meter.high_score = last_score;
     dinorunner_distancemeter_writehighscore(&dinorunner->distance_meter, dinorunner->distance_meter.high_score,
                                             dinorunner->user_data);
   }
-  dinorunner_distancemeter_draw(&dinorunner->distance_meter, 0, last_score, 0, dinorunner->user_data);
-  dinorunner_distancemeter_draw(&dinorunner->distance_meter, 0, dinorunner->distance_meter.high_score, 1,
-                                dinorunner->user_data);
   dinorunner->time = dinorunner_gettimestamp(dinorunner->user_data);
-  dinorunner_clearcanvas(dinorunner->user_data);
 }
 
 static inline void dinorunner_createadjustedcollisionbox(const struct collision_box_s* box,
@@ -188,8 +179,8 @@ unsigned char dinorunner_update(struct dinorunner_s* dinorunner) {
   unsigned long now        = dinorunner_gettimestamp(dinorunner->user_data);
   unsigned long delta_time = now - dinorunner->time;
   dinorunner->time         = now;
+  dinorunner_clearcanvas(dinorunner->user_data);
   if (dinorunner->playing) {
-    dinorunner_clearcanvas(dinorunner->user_data);
     if (dinorunner->trex.jumping) {
       dinorunner_trex_updatejump(&dinorunner->trex, delta_time, dinorunner->user_data);
     }
@@ -244,16 +235,21 @@ unsigned char dinorunner_update(struct dinorunner_s* dinorunner) {
   }
   if (dinorunner->crashed) {
     dinorunner_gameoverpanel_draw(&dinorunner->gameoverpanel, dinorunner->user_data);
-  } else if ((dinorunner->playing)) {
+    dinorunner_horizon_update(&dinorunner->horizon, 0, 0, 1, dinorunner->inverted, dinorunner->user_data);
+    dinorunner_distancemeter_draw(&dinorunner->distance_meter, 0,
+                                  dinorunner_distancemeter_getactualdistance(dinorunner->distance_ran), 0,
+                                  dinorunner->user_data);
+    dinorunner_distancemeter_draw(&dinorunner->distance_meter, 0, dinorunner->distance_meter.high_score, 1,
+                                  dinorunner->user_data);
+    dinorunner_trex_update(&dinorunner->trex, delta_time, TREX_STATUS_CRASHED, dinorunner->user_data);
+  } else if (dinorunner->playing) {
     dinorunner_trex_update(&dinorunner->trex, delta_time, TREX_STATUS_NONE, dinorunner->user_data);
   } else if ((!dinorunner->activated) && (dinorunner->trex.blink_count < DINORUNNER_CONFIG_MAX_BLINK_COUNT)) {
     dinorunner_trex_update(&dinorunner->trex, delta_time, TREX_STATUS_NONE, dinorunner->user_data);
     dinorunner_horizonline_draw(&dinorunner->horizon.horizon_line, dinorunner->user_data);
-    dinorunner_clearcanvas(dinorunner->user_data);
   } else {
     dinorunner_trex_update(&dinorunner->trex, delta_time, TREX_STATUS_WAITING, dinorunner->user_data);
     dinorunner_horizonline_draw(&dinorunner->horizon.horizon_line, dinorunner->user_data);
-    dinorunner_clearcanvas(dinorunner->user_data);
   }
   return 1u;
 }
