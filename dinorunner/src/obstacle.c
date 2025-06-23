@@ -154,7 +154,6 @@ static void obstacle_draw(const struct obstacle_s* obstacle, void* user_data) {
 void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e obstacle_type,
                               const struct dimension_s* dimension, float gap_coefficient, float speed, int opt_x_offset,
                               void* user_data) {
-  TREX_UNUSED(gap_coefficient);
   obstacle->y_pos         = 0;
   obstacle->width         = 0;
   obstacle->gap           = 0;
@@ -173,7 +172,7 @@ void dinorunner_obstacle_init(struct obstacle_s* obstacle, enum obstacle_type_e 
   obstacle->gap                        = 0u;
   obstacle->timer                      = 0u;
   obstacle->following_obstacle_created = 0u;
-  obstacle->gap_coefficient            = DINORUNNER_CONFIG_MAX_GAP_COEFFICIENT;
+  obstacle->gap_coefficient            = gap_coefficient;
   if (obstacle->size > 1 && (obstacle->config.multiple_speed > speed)) {
     obstacle->size = 1;
   }

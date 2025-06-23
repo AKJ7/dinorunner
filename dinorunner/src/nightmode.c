@@ -8,10 +8,11 @@
 
 #include "dinorunner.h"
 
-static float dinorunner_nightmode_updateXPos(float current_pos, float speed, unsigned container_width) {
+static float dinorunner_nightmode_updateXPos(float current_pos, float speed, unsigned container_width,
+                                             float runner_speed) {
   if (current_pos < -DINORUNNER_CONFIG_NIGHTMODE_WIDTH) {
     current_pos = container_width;
-  } else {
+  } else if (runner_speed != 0) {
     current_pos -= speed;
   }
   return current_pos;
@@ -56,7 +57,7 @@ void dinorunner_nightmode_init(struct nightmode_s* nightmode, unsigned container
 }
 
 unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigned char show_nightmode,
-                                          unsigned container_width, void* user_data) {
+                                          unsigned container_width, float current_speed, void* user_data) {
   if (show_nightmode && nightmode->opacity == 0) {
     nightmode->current_phase++;
     if (nightmode->current_phase >= DINORUNNER_CONFIG_NIGHTMODE_MOONPHASES) {
@@ -71,12 +72,12 @@ unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigne
     nightmode->opacity -= DINORUNNER_CONFIG_NIGHTMODE_FADESPEED;
   }
   if (nightmode->opacity > 0) {
-    nightmode->x_pos =
-        dinorunner_nightmode_updateXPos(nightmode->x_pos, DINORUNNER_CONFIG_NIGHTMODE_MOONSPEED, container_width);
+    nightmode->x_pos = dinorunner_nightmode_updateXPos(nightmode->x_pos, DINORUNNER_CONFIG_NIGHTMODE_MOONSPEED,
+                                                       container_width, current_speed);
     if (nightmode->draw_stars) {
       for (unsigned i = 0; i < DINORUNNER_CONFIG_NIGHTMODE_NUMBSTARS; ++i) {
         nightmode->stars[i].x = dinorunner_nightmode_updateXPos(
-            nightmode->stars[i].x, (float)DINORUNNER_CONFIG_NIGHTMODE_STARSPEED, container_width);
+            nightmode->stars[i].x, (float)DINORUNNER_CONFIG_NIGHTMODE_STARSPEED, container_width, current_speed);
       }
     }
     dinorunner_nightmode_draw(nightmode, user_data);
@@ -91,5 +92,5 @@ unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigne
 void dinorunner_nightmode_reset(struct nightmode_s* nightmode, unsigned container_width, void* user_data) {
   nightmode->current_phase = 0;
   nightmode->opacity       = 0;
-  dinorunner_nightmode_update(nightmode, 0, container_width, user_data);
+  dinorunner_nightmode_update(nightmode, 0, container_width, 0, user_data);
 }

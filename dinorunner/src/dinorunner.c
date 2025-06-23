@@ -39,7 +39,7 @@ unsigned char dinorunner_init(struct dinorunner_s* dinorunner, const struct dime
   dinorunner->user_data        = user_data;
   dinorunner->inverted         = 0u;
   res &= dinorunner_horizon_init(&dinorunner->horizon, &dinorunner->dimension,
-                                 -DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT, dinorunner->user_data);
+                                 DINORUNNER_CONFIG_HORIZON_GAP_COEFFICIENT, dinorunner->user_data);
   res &= dinorunner_trex_init(&dinorunner->trex, dimension->width, dimension->height, dinorunner->user_data);
   res &= dinorunner_gameoverpanel_init(&dinorunner->gameoverpanel, dimension);
   res &= dinorunner_distancemeter_init(&dinorunner->distance_meter, &text_dimension, dimension->width,
