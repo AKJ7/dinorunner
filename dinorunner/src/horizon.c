@@ -162,7 +162,7 @@ unsigned char dinorunner_horizon_update(struct horizon_s* horizon, float delta_t
                                         void* user_data) {
   horizon->running_time += delta_time;
   dinorunner_horizonline_update(&horizon->horizon_line, delta_time, current_speed, user_data);
-  dinorunner_nightmode_update(&horizon->nightmode, show_night_mode, horizon->dimension.width, user_data);
+  dinorunner_nightmode_update(&horizon->nightmode, show_night_mode, horizon->dimension.width, current_speed, user_data);
   update_clouds(horizon, delta_time, current_speed, user_data);
   if (update_obstacles_request) {
     update_obstacles(horizon, delta_time, current_speed, user_data);

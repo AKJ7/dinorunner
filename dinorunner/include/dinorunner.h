@@ -595,6 +595,13 @@ void dinorunner_onkeydown(struct dinorunner_s* dinorunner);
 void dinorunner_onkeynone(struct dinorunner_s* dinorunner);
 
 /**
+ * @brief Reinitialize pseudo-random value generator start value
+ * 
+ * @param random_seed Start value to reinitialize with
+ */
+void dinorunner_seed(unsigned short random_seed);
+
+/**
  * @defgroup Internal functions
  * Used internally by the dinorunner routines
  * @{
@@ -640,7 +647,7 @@ unsigned char dinorunner_distancemeter_update(struct distance_meter_s* distance_
 void dinorunner_nightmode_init(struct nightmode_s* nightmode, unsigned width);
 void dinorunner_nightmode_reset(struct nightmode_s* nightmode, unsigned container_width, void* user_data);
 unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigned char show_nightmode,
-                                          unsigned container_width, void* user_data);
+                                          unsigned container_width, float current_speed, void* user_data);
 
 unsigned char dinorunner_trex_init(struct trex_s* trex, unsigned container_width, unsigned container_height,
                                    void* user_data);

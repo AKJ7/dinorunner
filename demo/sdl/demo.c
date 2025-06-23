@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "dinorunner.h"
 
 #define LOG(format, ...) fprintf(stderr, "[%24s(%3d)] " format "\n", __FUNCTION__, __LINE__, __VA_ARGS__)
@@ -122,9 +123,6 @@ static uint8_t render_background(hypervisor_s* hypervisor) {
   int status;
   status = SDL_RenderClear(hypervisor->g_renderer);
   status = SDL_SetRenderDrawColor(hypervisor->g_renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
-  // status = SDL_SetRenderDrawColor(hypervisor->g_renderer, kBackgroundColor, kBackgroundColor, kBackgroundColor,
-  //                                 SDL_ALPHA_OPAQUE);
-  // SDL_RenderFillRect(hypervisor->g_renderer, &game_rect);
   SDL_assert(status == 0);
   SDL_RenderFillRect(hypervisor->g_renderer, NULL);
   SDL_RenderPresent(hypervisor->g_renderer);
@@ -353,6 +351,7 @@ static uint8_t system_init(hypervisor_s* hypervisor) {
   load_scorefile(hypervisor);
   SDL_initFramerate(&hypervisor->fps_manager);
   SDL_setFramerate(&hypervisor->fps_manager, kFrameRate);
+  dinorunner_seed((unsigned short)time(NULL));
   status = dinorunner_init(&hypervisor->dinorunner, &kGameDimension, hypervisor);
   return status;
 }

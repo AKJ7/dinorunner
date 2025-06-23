@@ -84,16 +84,18 @@ unsigned dinorunner_rand(void) {
 
 float dinorunner_srand(void) {
   unsigned rand = dinorunner_rand();
-  return (float)rand / 0xFFFF;
+  return (float)rand / (unsigned short)(-1);
 }
 
 unsigned dinorunner_getrandomnumb(unsigned min_value, unsigned max_value) {
-  unsigned value = dinorunner_rand();
-  value %= (max_value + 1);
-  if (value >= max_value) {
-    value = max_value;
-  } else if (value <= min_value) {
-    value = min_value;
+  float random_value = dinorunner_srand();
+  if (min_value > max_value) {
+    min_value = max_value;
   }
-  return value;
+  unsigned interval = max_value - min_value;
+  return min_value + dinorunner_roundf(random_value * interval);
+}
+
+void dinorunner_seed(unsigned short random_seed) {
+  lfsr = random_seed;
 }
