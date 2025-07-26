@@ -57,19 +57,23 @@ sudo make install -C dinorunner/build/
 the libraries can be installed system-wide.
 
 2. **dinorunner-sdl**: This is a running example of the project. It uses sdl2 to process user input and display the output of `libdinorunner` to the screen. 
-This project provides a preset docker container into which the program compiles and runs.
+Using CMake, the dependencies can be automatically downloaded, locally built, then linked to the demos. This can be done using 
+```shell
+cmake -DCMAKE_BUILD_TYPE=Release -DDINORUNNER_SDL_EXAMPLE_VENDORED=ON -S demo -B demo/build && cmake --build demo/build && demo/sdl/bin/dinorunner_sdl
+```
+In case SDL2, SDL2-Image and SDL2-gfx are already installed, simply run
+```
+cmake -DCMAKE_BUILD_TYPE=Release -S demo -B demo/build && cmake --build demo/build && demo/sdl/bin/dinorunner_sdl
+```
+to build and run the executable. The dependencies can manually be installed using 
+```shell
+sudo apt -y install libsdl2-dev libsdl2-image-dev libsdl2-gfx-dev
+```
+This project also provides a preset docker container into which the program compiles and runs.
 Before running the examples in a docker container, the x-server needs to permit access to client outside its host. This is done using: `xhost +`.
 The simplest way to run the program is using docker-compose:
 ```shell
 docker compose -f docker-compose.yml up dinorunner
-```
-Alternaively, using CMake:
-```shell
-cmake -DCMAKE_BUILD_TYPE=Release -S demo -B demo/build && cmake --build demo/build && demo/bin/dinorunner_sdl
-```
-while requiring `libsdl2-dev` `libsdl2-image-dev` `libsdl2-gfx-dev` installable with:
-```shell
-sudo apt -y install libsdl2-dev libsdl2-image-dev libsdl2-gfx-dev
 ```
 
 ## API  

@@ -70,7 +70,7 @@
         {
             "label": "Run Demo",
             "type": "shell",
-            "command": "${cwd}/demo/bin/dinorunner_sdl",
+            "command": "${cwd}/demo/sdl/bin/dinorunner_sdl",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

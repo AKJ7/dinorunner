@@ -42,10 +42,10 @@ include(GenerateExportHeader)
 
 add_library(dinorunner_shared SHARED ${DINORUNNER_CORE_FILES})
 add_library(dinorunner_static STATIC ${DINORUNNER_CORE_FILES})
-target_include_directories(dinorunner_shared PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
-target_include_directories(dinorunner_static PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
-target_link_options(dinorunner_shared PUBLIC "-nostdlib")
-target_link_options(dinorunner_static PUBLIC "-nostdlib")
+target_include_directories(dinorunner_shared PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+target_include_directories(dinorunner_static PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+target_link_options(dinorunner_shared PRIVATE "-nostdlib")
+target_link_options(dinorunner_static PRIVATE "-nostdlib")
 
 set_target_properties(dinorunner_shared
     PROPERTIES OUTPUT_NAME dinorunner

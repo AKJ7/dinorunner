@@ -129,7 +129,7 @@ static uint8_t render_background(hypervisor_s* hypervisor) {
   return 1u;
 }
 
-static uint8_t load_inverted_textures(hypervisor_s* hypervisor) {
+static uint8_t system_loadInvertedTextures(hypervisor_s* hypervisor) {
   if (hypervisor == NULL) {
     return 0u;
   }
@@ -151,15 +151,15 @@ static uint8_t load_inverted_textures(hypervisor_s* hypervisor) {
   int lock_result = SDL_LockTexture(sprites, NULL, (void**)&pixel, &pitch);
   lock_result |= SDL_LockTexture(isprites, NULL, (void**)&ipixel, &ipitch);
   if (lock_result != 0) {
-    LOG("%s", "Could not lock texture");
+    LOG("%s: %s", "Could not lock texture", SDL_GetError());
     return 0u;
   }
   for (int i = 0; i < height; ++i) {
     for (int j = 0, l = 0; l < width; l++, j += 4) {
       int pos         = (i * pitch) + j;
-      ipixel[pos + 3] = 0xFF - pixel[pos + 3];
+      ipixel[pos + 3] = 0xFF - pixel[pos + 1];
       ipixel[pos + 2] = 0xFF - pixel[pos + 2];
-      ipixel[pos + 1] = 0xFF - pixel[pos + 1];
+      ipixel[pos + 1] = 0xFF - pixel[pos + 3];
       ipixel[pos + 0] = pixel[pos + 0];
     }
   }
@@ -182,43 +182,58 @@ static uint8_t load_inverted_textures(hypervisor_s* hypervisor) {
  * representation as SDL doesn't support grayscale images.
  * Otherwise the image is loaded as normal.
  */
-static uint8_t load_sprite(hypervisor_s* hypervisor) {
+static uint8_t system_loadSprite(hypervisor_s* hypervisor) {
   const int img_flags = IMG_INIT_PNG;
   int status          = IMG_Init(img_flags) & img_flags;
   SDL_assert(status == img_flags);
   SDL_Surface* image = IMG_Load(sprite_filename);
   SDL_assert(image != NULL);
-  if (image->format->BytesPerPixel == 2u) {
-    LOG("%s", "Detected grayscale sprite image. Converting to RGB ...");
-    SDL_Texture* my_texture = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_RGBA8888,
+  SDL_Texture* my_texture = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_RGBA8888,
                                                 SDL_TEXTUREACCESS_STREAMING, image->w, image->h);
-    unsigned char* pixel;
-    int pitch = 0;
-    SDL_LockTexture(my_texture, NULL, (void**)&pixel, &pitch);
-    SDL_LockSurface(image);
-    unsigned char* sprite_pixels = image->pixels;
-    for (int i = 0; i < image->h; ++i) {
-      for (int j = 0, k = 0, l = 0; l < image->w; j += image->format->BytesPerPixel, k += 4, l++) {
-        int source_pos        = (i * image->pitch) + j;
-        int target_pos        = (i * pitch) + k;
-        pixel[target_pos + 3] = sprite_pixels[source_pos + 0];
-        pixel[target_pos + 2] = sprite_pixels[source_pos + 0];
-        pixel[target_pos + 1] = sprite_pixels[source_pos + 0];
-        pixel[target_pos + 0] = sprite_pixels[source_pos + 1];
-      }
-    }
-    SDL_UnlockTexture(my_texture);
-    SDL_UnlockSurface(image);
-    hypervisor->g_sprite = my_texture;
+  SDL_assert(my_texture != NULL);
+  int r_offset, g_offset, b_offset, alpha_offset;
+  if (image->format->BytesPerPixel == 2u) {
+    LOG("%s", "Detected grayscale sprite image. Converting to RGBA ...");
+    r_offset = 0;
+    g_offset = 0;
+    b_offset = 0;
+    alpha_offset = 1;
   } else if (image->format->BytesPerPixel == 4u) {
-    LOG("%s", "Detected RGB image. No conversion required.");
-    hypervisor->g_sprite = IMG_LoadTexture(hypervisor->g_renderer, sprite_filename);
+    LOG("%s", "Detected RGBA-like image. No conversion required.");
+    r_offset = 0;
+    g_offset = 1;
+    b_offset = 2;
+    alpha_offset = 3;
   } else {
     LOG("%s", "Could not process sprite image!");
+    SDL_FreeSurface(image);
+    return 0u;
   }
+  unsigned char* pixel;
+  int pitch = 0;
+  int lock_result = SDL_LockTexture(my_texture, NULL, (void**)&pixel, &pitch);
+  lock_result |= SDL_LockSurface(image);
+  if (lock_result != 0) {
+      LOG("%s: %s", "Could not lock texture or surface", SDL_GetError());
+      return 0;
+  }
+  unsigned char* sprite_pixels = image->pixels;
+  for (int i = 0; i < image->h; ++i) {
+    for (int j = 0, k = 0, l = 0; l < image->w; j += image->format->BytesPerPixel, k += 4, l++) {
+      int source_pos        = (i * image->pitch) + j;
+      int target_pos        = (i * pitch) + k;
+      pixel[target_pos + 3] = sprite_pixels[source_pos + r_offset];
+      pixel[target_pos + 2] = sprite_pixels[source_pos + g_offset];
+      pixel[target_pos + 1] = sprite_pixels[source_pos + b_offset];
+      pixel[target_pos + 0] = sprite_pixels[source_pos + alpha_offset];
+    }
+  }
+  SDL_UnlockTexture(my_texture);
+  SDL_UnlockSurface(image);
+  hypervisor->g_sprite = my_texture;
   SDL_FreeSurface(image);
   SDL_assert(hypervisor->g_sprite);
-  uint8_t inverted = load_inverted_textures(hypervisor);
+  uint8_t inverted = system_loadInvertedTextures(hypervisor);
   SDL_SetTextureBlendMode(hypervisor->g_sprite, SDL_BLENDMODE_BLEND);
   SDL_SetTextureBlendMode(hypervisor->g_inverted_sprite, SDL_BLENDMODE_BLEND);
   return inverted;
@@ -339,7 +354,11 @@ static uint8_t system_init(hypervisor_s* hypervisor) {
     return 0u;
   }
   render_background(hypervisor);
-  load_sprite(hypervisor);
+  uint8_t load_status = system_loadSprite(hypervisor);
+  if (load_status != 1u) {
+      LOG("%s", "Could not load sprites");
+      return 0u;
+  }
   SDL_SetRenderTarget(hypervisor->g_renderer, NULL);
   int status = SDL_RenderCopy(hypervisor->g_renderer, hypervisor->g_background, NULL, NULL);
   SDL_assert(status == 0);
