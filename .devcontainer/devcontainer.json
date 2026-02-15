@@ -44,7 +44,8 @@
 				"ms-vscode.cmake-tools",
 				"ms-vscode.cpptools-extension-pack",
 				"xaver.clang-format",
-				"cschlosser.doxdocgen"
+				"cschlosser.doxdocgen",
+				"1YiB.rust-bundle"
 			]
 		}
 	}

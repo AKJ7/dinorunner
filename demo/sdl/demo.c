@@ -742,7 +742,7 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
   dinorunner_isalive(&hypervisor->dinorunner, &is_alive);
   if (is_alive) {
     if (hypervisor->intro_clip_width < kGameDimension.width) {
-      hypervisor->intro_clip_width += (unsigned)(2 * ((float)kFrameRate / DINORUNNER_CONFIG_CORE_FPS));
+      hypervisor->intro_clip_width += (unsigned)(2.0f * ((float)kFrameRate / DINORUNNER_CONFIG_CORE_FPS));
     }
   }
   SDL_RenderSetClipRect(hypervisor->g_renderer, &clip_rect);

@@ -29,7 +29,7 @@ FetchContent_MakeAvailable("${DINORUNNER_SDL_EXAMPLE_DEPENDENCIES}")
 add_library(sdl2_gfx STATIC "${sdl_gfx_SOURCE_DIR}/SDL2_framerate.c")
 
 SET(DINORUNNER_SDL_EXAMPLE_INCLUDE_DIRS "${sdl2_SOURCE_DIR}/include;${sdl2_image_SOURCE_DIR}/include;${sdl_gfx_SOURCE_DIR}")
-SET(DINORUNNER_SDL_EXAMPLE_LIBARIES "SDL2;SDL2::image;sdl2_gfx")
+SET(DINORUNNER_SDL_EXAMPLE_LIBARIES "SDL2;SDL2_image::SDL2_image;sdl2_gfx")
 # FetchContent_MakeAvailable(SDL2 SDL2_IMAGE SDL_GFX)
  
 

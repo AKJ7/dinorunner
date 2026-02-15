@@ -2,5 +2,7 @@
     "recommendations": [
         "twxs.cmake",
         "ms-vscode.cmake-tools",
+        "1yib.rust-bundle",
+        "vscodevim.vim",
     ]
 }
