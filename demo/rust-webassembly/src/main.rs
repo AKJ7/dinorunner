@@ -3,19 +3,13 @@
 // extern crate dinorunner_api;
 
 mod system;
-
 use system::Hypervisor;
 
-
 fn main() {
-    Hypervisor::new()
-        .and_then(|hypervisor| {
-            println!("{hypervisor}");
-            Ok(hypervisor)
-        }).and_then(|mut hypervisor| {
-            hypervisor.init().unwrap();
-            Ok(hypervisor)
-        }) .and_then(|mut hypervisor| {
-            hypervisor.run()
-        }).unwrap()
+    let mut hypervisor = Hypervisor::new().and_then(|v| {
+        println!("{v}");
+        Ok(v)
+    }).unwrap();
+    let hypervisor = hypervisor.init().unwrap();
+    hypervisor.run().expect("TODO: panic message");
 }

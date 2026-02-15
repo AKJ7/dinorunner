@@ -1,8 +1,8 @@
-// #![allow(dead_code, unused_variables)]
+#![allow(dead_code, unused_variables, unused_imports, unused_unsafe, improper_ctypes)]
 
 pub mod dinorunner_api {
     
-    use libc::{c_uint, c_uchar, c_void, user};
+    use libc::{c_uint, c_uchar, c_void};
 
     #[repr(C)]
     #[derive(Default)]

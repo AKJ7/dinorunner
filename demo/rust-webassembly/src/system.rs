@@ -1,4 +1,4 @@
-use dinorunner_api::dinorunner_api::dinorunner_api::{dinorunner_s, dimension_s, version_s};
+use dinorunner_api::dinorunner_api::dinorunner_api::{dinorunner_s, dimension_s};
 use std::fmt;
 use std::fmt::Formatter;
 use rand::RngExt;
@@ -21,13 +21,13 @@ impl Hypervisor {
         Ok(hypervisor)
     }
 
-    pub fn init(&mut self) -> Result<(), &'static str> {
+    pub fn init(&mut self) -> Result<&mut Self, &'static str> {
         // self.dinorunner.init(dimension, self)
-        Ok(())
+        Ok(self)
     }
 
-    pub fn run(&mut self) -> Result<(), &'static str> {
-        Ok(())
+    pub fn run(&mut self) -> Result<&mut Self, &'static str> {
+        Ok(self)
     }
 }
 
