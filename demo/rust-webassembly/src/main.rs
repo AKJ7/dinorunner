@@ -3,13 +3,16 @@
 // extern crate dinorunner_api;
 
 mod system;
+
+use std::sync::Arc;
 use system::Hypervisor;
 
 fn main() {
-    let mut hypervisor = Hypervisor::new().and_then(|v| {
-        println!("{v}");
-        Ok(v)
-    }).unwrap();
-    let hypervisor = hypervisor.init().unwrap();
-    hypervisor.run().expect("TODO: panic message");
+    let hypervisor = Hypervisor::new();
+    let value = hypervisor.lock();
+    if value.is_ok() {
+        let mut s = value.unwrap();
+        s.init().expect("TODO: panic message");
+        s.run().expect("TODO: ");
+    }
 }

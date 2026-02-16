@@ -2,17 +2,24 @@
 name = "rust-webassembly"
 version = "0.1.0"
 edition = "2024"
-authors = [ "AKJ7" ]
+authors = ["AKJ7"]
 
 [dependencies]
 libc = "0.2.182"
 rand = "0.10.0"
+openal = "0.2.2"
+sfml = "0.24.0"
+oal-sys = "0.0.2"
+vorbis = "0.1.0"
 # dinorunner_api = "*"
 # wasm-opt = "0.116.1"
 
-[build]
-build = "build.rs"
+#[build]
+#build = "build.rs"
 
 [lib]
 name = "dinorunner_api"
 crate-type = ["rlib"]
+
+#[env]
+#OPENALDIR =
