@@ -7,7 +7,7 @@
 )]
 
 pub mod dinorunner_api {
-    use libc::{c_uchar, c_uint, c_ulong, c_void};
+    use libc::{c_int, c_uchar, c_uint, c_ulong, c_void};
     use std::fmt;
     use std::fmt::Formatter;
 
@@ -43,7 +43,7 @@ pub mod dinorunner_api {
         fn dinorunner_init(
             dinorunner: *mut dinorunner_s,
             dimension: *const dimension_s,
-            user_data: *mut libc::c_void,
+            user_data: *mut c_void,
         ) -> c_uchar;
         fn dinorunner_update(dinorunner: *mut dinorunner_s) -> c_uchar;
         fn dinorunner_getversion(version: *mut version_s) -> c_uchar;
@@ -150,16 +150,27 @@ pub mod dinorunner_api {
         }
     }
 
+    pub trait LibDinorunner<'t> {
+        // fn get_timestamp<T>(userdata: &mut T) -> Result<u64, &'static str>;
+        fn get_timestamp<T>() -> Result<u64, &'static str>;
+    }
+
+    // #[unsafe(no_mangle)]
+    // pub extern "C" fn dinorunner_gettimestamp(user_data: *mut c_void) -> c_ulong {
+    //     println!("Getting timestamp");
+    //     return 1;
+    // }
+
     #[unsafe(no_mangle)]
-    pub extern "C" fn dinorunner_gettimestamp(user_data: *mut libc::c_void) -> libc::c_ulong {
-        println!("Getting timestamp");
+    extern "C" fn dinorunner_gettimestamp(user_data: *mut c_void) -> c_ulong {
+        // let current_time = LibDinorunner::get_timestamp().unwrap();
         return 1;
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn dinorunner_writehighscore(
-        high_score: libc::c_ulong,
-        user_data: *mut libc::c_void,
+        high_score: c_ulong,
+        user_data: *mut c_void,
     ) -> libc::c_uchar {
         println!("Writing high score: {high_score}");
         return 0;
@@ -167,8 +178,8 @@ pub mod dinorunner_api {
 
     #[unsafe(no_mangle)]
     pub extern "C" fn dinorunner_readhighscore(
-        high_score: *mut libc::c_ulong,
-        user_data: *mut libc::c_void,
+        high_score: *mut c_ulong,
+        user_data: *mut c_void,
     ) -> libc::c_uchar {
         println!("Reading high score");
         return 0;
@@ -187,30 +198,24 @@ pub mod dinorunner_api {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn dinorunner_playsound(
-        sound: libc::c_int,
-        user_data: *mut libc::c_void,
-    ) -> libc::c_uchar {
+    pub extern "C" fn dinorunner_playsound(sound: c_int, user_data: *mut c_void) -> c_uchar {
         println!("Playing sound: {sound}");
         return 0;
     }
 
     #[unsafe(no_mangle)]
     pub extern "C" fn dinorunner_draw(
-        sprite: libc::c_int,
+        sprite: c_int,
         pos: *const pos_s,
-        opacity: libc::c_uchar,
-        user_data: *mut libc::c_void,
-    ) -> libc::c_uchar {
+        opacity: c_uchar,
+        user_data: *mut c_void,
+    ) -> c_uchar {
         println!("Drawing: {sprite}, {opacity}");
         return 0;
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn dinorunner_log(
-        user_data: libc::c_void,
-        format: *const libc::c_char,
-    ) -> libc::c_uchar {
+    pub extern "C" fn dinorunner_log(user_data: c_void, format: *const libc::c_char) -> c_uchar {
         println!("Logging: ");
         return 0;
     }

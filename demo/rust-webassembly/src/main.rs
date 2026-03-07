@@ -13,6 +13,6 @@ fn main() {
     if value.is_ok() {
         let mut s = value.unwrap();
         s.init().expect("TODO: panic message");
-        s.run().expect("TODO: ");
+        // s.run().expect("TODO: ");
     }
 }
