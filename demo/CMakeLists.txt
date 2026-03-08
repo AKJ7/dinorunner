@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 
 project(dinorunner-demos DESCRIPTION "Running examples of the dinorunner library" LANGUAGES C CXX)
 

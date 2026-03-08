@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 
 project(dinorunner-sdl
     VERSION 1.3.2
@@ -16,7 +16,7 @@ set(DINORUNNER_LIB_PATH ${PROJECT_SOURCE_DIR}/../../dinorunner)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 include(FindPkgConfig)
-
+include(FindPackageHandleStandardArgs)
 
 if (DINORUNNER_SDL_EXAMPLE_VENDORED)
     include(dependencies)
@@ -31,11 +31,6 @@ else()
     set(DINORUNNER_SDL_EXAMPLE_LIBARIES ${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES} ${SDL2_gfx_LIBRARIES})
 endif()
 
-
 add_executable(dinorunner_sdl demo.c)
-
 find_package(dinorunner PATHS ${DINORUNNER_LIB_PATH} REQUIRED)
-target_include_directories(dinorunner_sdl PRIVATE "${DINORUNNER_LIB_PATH}/include")
-add_subdirectory(${DINORUNNER_LIB_PATH} ${DINORUNNER_LIB_PATH}/lib EXCLUDE_FROM_ALL)
-target_link_directories(dinorunner_sdl PRIVATE ${DINORUNNER_LIB_PATH}/lib)
-target_link_libraries(dinorunner_sdl PRIVATE ${DINORUNNER_SDL_EXAMPLE_LIBARIES} dinorunner_static)
+target_link_libraries(dinorunner_sdl PRIVATE ${DINORUNNER_SDL_EXAMPLE_LIBARIES} dinorunner::dinorunner_static)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.11)
 
 cmake_policy(PUSH)
 
@@ -29,11 +29,7 @@ set(CMAKE_C_IMPLICIT_LINK_LIBRARIES "")
 set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "")
 set(CMAKE_CXX_IMPLICIT_LINK_LIBRARIES "")
 set(CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES "")
-set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR}/dinorunner
-    CACHE PATH "Location of header files" )
-set(SYSCONFIG_INSTALL_DIR ${CMAKE_INSTALL_SYSCONFDIR}/dinorunner
-    CACHE PATH "Location of configuration files" )
-
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 configure_file(${PROJECT_SOURCE_DIR}/src/version.c.in ${PROJECT_SOURCE_DIR}/src/version.c)
 file(GLOB DINORUNNER_CORE_FILES ${PROJECT_SOURCE_DIR}/src/*[.h.c])
@@ -42,10 +38,13 @@ include(GenerateExportHeader)
 
 add_library(dinorunner_shared SHARED ${DINORUNNER_CORE_FILES})
 add_library(dinorunner_static STATIC ${DINORUNNER_CORE_FILES})
-target_include_directories(dinorunner_shared PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
-target_include_directories(dinorunner_static PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+add_library(dinorunner::dinorunner_static ALIAS dinorunner_static)
+add_library(dinorunner::dinorunner_shared ALIAS dinorunner_shared)
+target_include_directories(dinorunner_shared PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+target_include_directories(dinorunner_static PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 target_link_options(dinorunner_shared PRIVATE "-nostdlib")
 target_link_options(dinorunner_static PRIVATE "-nostdlib")
+# include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set_target_properties(dinorunner_shared
     PROPERTIES OUTPUT_NAME dinorunner
@@ -56,10 +55,16 @@ set_target_properties(dinorunner_static
     PROPERTIES OUTPUT_NAME dinorunner
 )
 
-target_compile_options(dinorunner_shared PRIVATE -Wall -Wextra -Wpedantic -fstack-usage)
+add_compile_options(-Wall -Wextra -Wpedantic -fstack-usage)
 
 generate_export_header(dinorunner_shared)
 include(GNUInstallDirs)
+
+set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}"
+    CACHE PATH "Location of header files" )
+set(SYSCONFIG_INSTALL_DIR "${CMAKE_INSTALL_SYSCONFDIR}"
+    CACHE PATH "Location of configuration files" )
+
 include(GenerateExportHeader)
 
 install(TARGETS dinorunner_shared 
@@ -79,10 +84,16 @@ install(TARGETS dinorunner_static
 )
 
 install(FILES include/dinorunner.h
-    DESTINATION include
+    DESTINATION "include/${PROJECT_NAME}"
     COMPONENT Devel)
 
 include(CMakePackageConfigHelpers)
+
+configure_file(cmake/dinorunnerConfig.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/dinorunner/dinorunnerConfig.cmake" COPYONLY)
+configure_package_config_file(cmake/dinorunnerConfig.cmake.in "${PROJECT_SOURCE_DIR}/cmake/dinorunnerConfig.cmake" 
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dinorunner 
+    PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR CMAKE_CURRENT_BINARY_DIR
+    INSTALL_PREFIX)
 write_basic_package_version_file(
     "${CMAKE_CURRENT_BINARY_DIR}/dinorunner/dinorunnerConfigVersion.cmake"
     VERSION ${CMAKE_PROJECT_VERSION}
@@ -92,12 +103,6 @@ write_basic_package_version_file(
 export(EXPORT dinorunnerTargets 
     FILE "${CMAKE_CURRENT_BINARY_DIR}/dinorunner/dinorunnerTargets.cmake"
     NAMESPACE dinorunner::)
-
-configure_file(cmake/dinorunnerConfig.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/dinorunner/dinorunnerConfig.cmake" COPYONLY)
-configure_package_config_file(cmake/dinorunnerConfig.cmake.in "${PROJECT_SOURCE_DIR}/cmake/dinorunnerConfig.cmake" 
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/dinorunner 
-    PATH_VARS INCLUDE_INSTALL_DIR SYSCONFIG_INSTALL_DIR)
-
 set(ConfigPackageLocation lib/cmake/dinorunner)
 install(EXPORT dinorunnerTargets
     FILE dinorunnerTargets.cmake
@@ -107,6 +112,5 @@ install(FILES cmake/dinorunnerConfig.cmake
     "${CMAKE_CURRENT_BINARY_DIR}/dinorunner/dinorunnerConfigVersion.cmake"
     DESTINATION ${ConfigPackageLocation}
     COMPONENT Devel)
-
 
 cmake_policy(POP)

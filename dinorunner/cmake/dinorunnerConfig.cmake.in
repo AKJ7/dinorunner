@@ -1,7 +1,26 @@
 @PACKAGE_INIT@
-set(DINORUNNER_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
-set(DINORUNNER_SYSCONFIG_DIR "@PACKAGE_SYSCONFIG_INSTALL_DIR@")
-set(DINORUNNER_INCLUDE_DIR "@CMAKE_INSTALL_FULL_INCLUDEDIR@/dinorunner/")
-set(DINORUNNER_BINARY_DIR "@CMAKE_INSTALL_PREFIX@/lib")
+
+set(DINORUNNER_TARGET_DIR "@PACKAGE_CMAKE_CURRENT_BINARY_DIR@/dinorunner/dinorunnerTargets.cmake")
+include(${DINORUNNER_TARGET_DIR})
+
+# Compute installation prefix relative to this file
+get_filename_component(_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(_prefix "${_dir}/.." ABSOLUTE)
+
+# set_and_check(DINORUNNER_SYSCONFIG_DIR "@PACKAGE_SYSCONFIG_INSTALL_DIR@")
+# set_and_check(DINORUNNER_INCLUDE_DIR "@CMAKE_INSTALL_FULL_INCLUDEDIR@")
+# set_and_check(DINORUNNER_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@/dinorunner")
+# set(dinorunner_INCLUDE_DIRS "@PACKAGE_INCLUDE_INSTALL_DIR@/dinorunner")
+set_and_check(dinorunner_INCLUDE_DIRS "${_prefix}/include")
+include_directories("${dinorunner_INCLUDE_DIRS}")
+# set_and_check(DINORUNNER_BINARY_DIR "@CMAKE_INSTALL_PREFIX@/lib")
+set_and_check(DINORUNNER_BINARY_DIR "${_prefix}/lib")
+# set(DINORUNNER_LIBRARY "dinorunner_static")
+# add_library(dinorunner_static STATIC IMPORTED)
+add_library(dinorunner ALIAS dinorunner::dinorunner_static)
+
+# add_library(dinorunner_static INTERFACE IMPORTED)
+# target_link_directories(dinorunner_static PUBLIC ${DINORUNNER_BINARY_DIR})
+# set_target_properties(dinorunner_static PROPERTIES INTERFACE_LINK_LIBRARIES dinorunner)
 
 check_required_components(dinorunner)

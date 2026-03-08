@@ -77,7 +77,7 @@ class Dinorunner : private dinorunner_s {
    * @return std::optional<bool> Empty optional on error, otherwise value as nightmode status
    */
   inline std::optional<bool> IsInverted() const {
-    unsigned char is_inverted = false;
+    unsigned char is_inverted;
     if ([[maybe_unused]] auto status = dinorunner_isinverted(this, &is_inverted)) {
       return is_inverted == 1u;
     }
