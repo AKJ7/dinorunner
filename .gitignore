@@ -6,3 +6,5 @@ demo/lib
 demo/sdl/bin
 dinorunner_highscore.txt
 build/
+bin/
+lib/

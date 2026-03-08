@@ -43,31 +43,13 @@ static inline std::optional<Version> GetVersion() {
  * 
  * @param random_seed Random seed
  */
-inline static void Seed(unsigned short random_seed) {
+static inline void Seed(unsigned short random_seed) {
   dinorunner_seed(random_seed);
 }
 
-/**
- * @brief Ugly trick to avoid templating the complete Dinorunner class
- * as the compiler doesn't know the user defined implementations for 
- * the reinterpret_casting below in the `extern C` functions. Yes, loss 
- * of performance occures, but it is merely the price we are ready to pay 
- * for accessability ...
- */
-struct DinorunnerImpl {
-  virtual bool ReadHighScore(unsigned long& high_score)                   = 0;
-  virtual bool WriteHighScore(unsigned long high_score)                   = 0;
-  virtual unsigned long GetTimestamp()                                    = 0;
-  virtual bool PlaySound(Sound sound)                                     = 0;
-  virtual bool Vibrate(unsigned duration)                                 = 0;
-  virtual bool ClearCanvas()                                              = 0;
-  virtual bool Draw(Sprite sprite, const Pos& pos, unsigned char opacity) = 0;
-  virtual bool Log(const char* message)                                   = 0;
-};
-
 class Dinorunner : private dinorunner_s {
  public:
-  Dinorunner(const Dimension& game_dimension, DinorunnerImpl& data) : data_{data}, game_dimension_{game_dimension} {}
+  Dinorunner(const Dimension& game_dimension) : game_dimension_{game_dimension} {}
 
   /**
    * @brief Initialize engine
@@ -107,7 +89,7 @@ class Dinorunner : private dinorunner_s {
    * 
    * @return std::optional<bool> Empty optional on error, otherwise value as alive state
    */
-  std::optional<bool> IsAlive() const {
+  inline std::optional<bool> IsAlive() const {
     unsigned char is_alive;
     if ([[maybe_unused]] auto status = dinorunner_isalive(this, &is_alive)) {
       return is_alive == 1u;
@@ -132,74 +114,70 @@ class Dinorunner : private dinorunner_s {
   inline void KeyNone() noexcept { dinorunner_onkeynone(this); }
 
   /**
-   * @brief Called by C-API to request a write of the high-score
-   * 
-   * @param high_score value to write
-   * @return true on success, false otherwise
-   */
-  inline bool WriteHighScore(unsigned long high_score) { return data_.WriteHighScore(high_score); }
+  * @brief Called by the C-API to request a read of the high-score
+  *
+  * @param high_score value to read into
+  * @return true on success, false otherwise
+  */
+  virtual bool ReadHighScore(unsigned long& high_score) = 0;
 
   /**
-   * @brief Called by the C-API to request a read of the high-score
-   * 
-   * @param high_score value to read into
-   * @return true on success, false otherwise
-   */
-  inline bool ReadHighScore(unsigned long& high_score) { return data_.ReadHighScore(high_score); }
+  * @brief Called by C-API to request a write of the high-score
+  *
+  * @param high_score value to write
+  * @return true on success, false otherwise
+  */
+  virtual bool WriteHighScore(unsigned long high_score) = 0;
 
   /**
-   * @brief Called by the C-APi to get the engine's timestamp
-   * 
-   * @return unsigned long timestamp
-   */
-  inline unsigned long GetTimestamp() { return data_.GetTimestamp(); }
+  * @brief Called by the C-APi to get the engine's timestamp
+  *
+  * @return unsigned long timestamp
+  */
+  virtual unsigned long GetTimestamp() = 0;
 
   /**
-   * @brief Called by the C-API to request a sound play
-   * 
-   * @param sound sound to play
-   * @return true on success, false otherwise
-   */
-  inline bool PlaySound(Sound sound) { return data_.PlaySound(sound); }
+  * @brief Called by the C-API to request a sound play
+  *
+  * @param sound sound to play
+  * @return true on success, false otherwise
+  */
+  virtual bool PlaySound(Sound sound) = 0;
 
   /**
-   * @brief Called by the C-API to request vibration
-   * 
-   * @param duration duration of the vibration in milliseconds
-   * @return true on success, false otherwise
-   */
-  inline bool Vibrate(unsigned duration) { return data_.Vibrate(duration); }
+  * @brief Called by the C-API to request vibration
+  *
+  * @param duration duration of the vibration in milliseconds
+  * @return true on success, false otherwise
+  */
+  virtual bool Vibrate(unsigned duration) = 0;
 
   /**
-   * @brief Called by the C-API to request a flush of the canvas
-   * 
-   * @return true on success, false otherwise
-   */
-  inline bool ClearCanvas() { return data_.ClearCanvas(); }
+  * @brief Called by the C-API to request a flush/rendering of the canvas
+  *
+  * @return true on success, false otherwise
+  */
+  virtual bool ClearCanvas() = 0;
 
   /**
-   * @brief Called by the C-API to request a draw of an object on the canvas
-   * 
-   * @param sprite Sprite to draw 
-   * @param pos Position at which to draw
-   * @param opacity Opacity of the sprite
-   * @return true on success, false otherwise
-   */
-  inline bool Draw(Sprite sprite, const Pos& pos, unsigned char opacity) {
-    std::clog << "Drawing sprite: " << (unsigned)sprite << ", at: (" << pos.x << ", " << pos.y << ")\n";
-    return data_.Draw(sprite, pos, opacity);
-  }
+  * @brief Called by the C-API to request a draw of an object on the canvas
+  *
+  * @param sprite Sprite to draw
+  * @param pos Position at which to draw
+  * @param opacity Opacity of the sprite
+  * @return true on success, false otherwise
+  */
+  virtual bool Draw(Sprite sprite, const Pos& pos, unsigned char opacity) = 0;
 
   /**
-   * @brief Called by the C-API to request logging notification
-   * 
-   * @param message message to log
-   * @return true on success, false otherwise
-   */
-  bool Log(const char* message) { return data_.Log(message); }
+  * @brief Called by the C-API to request logging notification
+  *
+  * @param message message to log
+  * @return true on success, false otherwise
+  */
+  virtual bool Log(const char* message) = 0;
 
- private:
-  DinorunnerImpl& data_;
+ public:
   const Dimension& game_dimension_;
 };
 
