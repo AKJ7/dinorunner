@@ -61,6 +61,8 @@ static const SDL_Rect KGameoverTextSprite    = {.x = 654, .y = 15, .w = 191, .h 
 static const uint32_t kWindowHeight          = kGameDimension.height + kPadding * 2;
 static const uint32_t kWindowWidth           = kGameDimension.width + kPadding * 2;
 static const uint32_t kFrameRate             = 60u;
+// ARGB8888 is the one texture format every SDL2 renderer supports (GLES2 rejects RGBA8888)
+static const uint32_t kTextureFormat         = SDL_PIXELFORMAT_ARGB8888;
 static const uint8_t kBackgroundColor        = 0xF2;
 static const uint16_t kRumbleFrequency       = 0xFFFF;
 static const unsigned char kNightModePhases[DINORUNNER_CONFIG_NIGHTMODE_MOONPHASES] = {140, 120, 100, 60, 40, 20, 0};
@@ -93,6 +95,28 @@ static uint8_t system_init(hypervisor_s* hypervisor);
 static uint8_t system_run(hypervisor_s* hypervisor);
 static uint8_t system_exit(hypervisor_s* hypervisor);
 
+/* Services requested by libdinorunner, see struct dinorunner_callbacks_s */
+static unsigned long frontend_gettimestamp(void* user_data);
+static unsigned char frontend_clearcanvas(void* user_data);
+static unsigned char frontend_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, unsigned char opacity,
+                                   void* user_data);
+static unsigned char frontend_playsound(enum dinorunner_sound_e sound, void* user_data);
+static unsigned char frontend_vibrate(unsigned duration, void* user_data);
+static unsigned char frontend_readhighscore(unsigned long* high_score, void* user_data);
+static unsigned char frontend_writehighscore(unsigned long high_score, void* user_data);
+static unsigned char frontend_log(const char* message, void* user_data);
+
+static const struct dinorunner_callbacks_s kCallbacks = {
+    .gettimestamp   = frontend_gettimestamp,
+    .clearcanvas    = frontend_clearcanvas,
+    .draw           = frontend_draw,
+    .playsound      = frontend_playsound,
+    .vibrate        = frontend_vibrate,
+    .readhighscore  = frontend_readhighscore,
+    .writehighscore = frontend_writehighscore,
+    .log            = frontend_log,
+};
+
 int main(int argc, char** argv) {
   hypervisor_s hypervisor;
   uint8_t status = system_preinit(&hypervisor);
@@ -112,12 +136,21 @@ static uint8_t system_preinit(hypervisor_s* hypervisor) {
   hypervisor->joystick           = NULL;
   hypervisor->nightmode_interpol = 0xFF;
   hypervisor->intro_clip_width   = kTrexSpriteStanding1.w;
+  for (unsigned i = 0; i < AUDIO_FILE_COUNT; ++i) {
+    hypervisor->sound_effect[i].audio_device_id = 0;
+    hypervisor->sound_effect[i].pos             = NULL;
+    hypervisor->sound_effect[i].length          = 0;
+  }
   return 1u;
 }
 
 static uint8_t render_background(hypervisor_s* hypervisor) {
-  hypervisor->g_background = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_RGBA8888,
-                                               SDL_TEXTUREACCESS_TARGET, kWindowWidth, kWindowHeight);
+  hypervisor->g_background = SDL_CreateTexture(hypervisor->g_renderer, kTextureFormat, SDL_TEXTUREACCESS_TARGET,
+                                               kWindowWidth, kWindowHeight);
+  if (hypervisor->g_background == NULL) {
+    LOG("%s: %s", "Could not create background texture", SDL_GetError());
+    return 0u;
+  }
   SDL_SetTextureBlendMode(hypervisor->g_background, SDL_BLENDMODE_BLEND);
   SDL_SetRenderTarget(hypervisor->g_renderer, hypervisor->g_background);
   int status;
@@ -129,7 +162,7 @@ static uint8_t render_background(hypervisor_s* hypervisor) {
   return 1u;
 }
 
-static uint8_t load_inverted_textures(hypervisor_s* hypervisor) {
+static uint8_t system_loadInvertedTextures(hypervisor_s* hypervisor) {
   if (hypervisor == NULL) {
     return 0u;
   }
@@ -146,25 +179,33 @@ static uint8_t load_inverted_textures(hypervisor_s* hypervisor) {
     LOG("%s", "Texture creation failed");
     return 0u;
   }
+  SDL_PixelFormat* pixel_format = SDL_AllocFormat(format);
+  if (pixel_format == NULL) {
+    LOG("%s: %s", "Could not allocate pixel format", SDL_GetError());
+    SDL_DestroyTexture(isprites);
+    return 0u;
+  }
   unsigned char *pixel, *ipixel;
   int pitch, ipitch;
   int lock_result = SDL_LockTexture(sprites, NULL, (void**)&pixel, &pitch);
   lock_result |= SDL_LockTexture(isprites, NULL, (void**)&ipixel, &ipitch);
   if (lock_result != 0) {
-    LOG("%s", "Could not lock texture");
+    LOG("%s: %s", "Could not lock texture", SDL_GetError());
+    SDL_FreeFormat(pixel_format);
     return 0u;
   }
   for (int i = 0; i < height; ++i) {
-    for (int j = 0, l = 0; l < width; l++, j += 4) {
-      int pos         = (i * pitch) + j;
-      ipixel[pos + 3] = 0xFF - pixel[pos + 3];
-      ipixel[pos + 2] = 0xFF - pixel[pos + 2];
-      ipixel[pos + 1] = 0xFF - pixel[pos + 1];
-      ipixel[pos + 0] = pixel[pos + 0];
+    const uint32_t* row = (const uint32_t*)(pixel + i * pitch);
+    uint32_t* irow      = (uint32_t*)(ipixel + i * ipitch);
+    for (int l = 0; l < width; l++) {
+      uint8_t r, g, b, a;
+      SDL_GetRGBA(row[l], pixel_format, &r, &g, &b, &a);
+      irow[l] = SDL_MapRGBA(pixel_format, 0xFF - r, 0xFF - g, 0xFF - b, a);
     }
   }
   SDL_UnlockTexture(sprites);
   SDL_UnlockTexture(isprites);
+  SDL_FreeFormat(pixel_format);
   hypervisor->g_inverted_sprite = isprites;
   return 1u;
 }
@@ -182,49 +223,83 @@ static uint8_t load_inverted_textures(hypervisor_s* hypervisor) {
  * representation as SDL doesn't support grayscale images.
  * Otherwise the image is loaded as normal.
  */
-static uint8_t load_sprite(hypervisor_s* hypervisor) {
+static uint8_t system_loadSprite(hypervisor_s* hypervisor) {
   const int img_flags = IMG_INIT_PNG;
   int status          = IMG_Init(img_flags) & img_flags;
   SDL_assert(status == img_flags);
   SDL_Surface* image = IMG_Load(sprite_filename);
   SDL_assert(image != NULL);
+  SDL_Texture* my_texture =
+      SDL_CreateTexture(hypervisor->g_renderer, kTextureFormat, SDL_TEXTUREACCESS_STREAMING, image->w, image->h);
+  if (my_texture == NULL) {
+    LOG("%s: %s", "Could not create sprite texture", SDL_GetError());
+    SDL_FreeSurface(image);
+    return 0u;
+  }
+  SDL_PixelFormat* pixel_format = SDL_AllocFormat(kTextureFormat);
+  if (pixel_format == NULL) {
+    LOG("%s: %s", "Could not allocate pixel format", SDL_GetError());
+    SDL_DestroyTexture(my_texture);
+    SDL_FreeSurface(image);
+    return 0u;
+  }
+  int r_offset, g_offset, b_offset, alpha_offset;
   if (image->format->BytesPerPixel == 2u) {
-    LOG("%s", "Detected grayscale sprite image. Converting to RGB ...");
-    SDL_Texture* my_texture = SDL_CreateTexture(hypervisor->g_renderer, SDL_PIXELFORMAT_RGBA8888,
-                                                SDL_TEXTUREACCESS_STREAMING, image->w, image->h);
-    unsigned char* pixel;
-    int pitch = 0;
-    SDL_LockTexture(my_texture, NULL, (void**)&pixel, &pitch);
-    SDL_LockSurface(image);
-    unsigned char* sprite_pixels = image->pixels;
-    for (int i = 0; i < image->h; ++i) {
-      for (int j = 0, k = 0, l = 0; l < image->w; j += image->format->BytesPerPixel, k += 4, l++) {
-        int source_pos        = (i * image->pitch) + j;
-        int target_pos        = (i * pitch) + k;
-        pixel[target_pos + 3] = sprite_pixels[source_pos + 0];
-        pixel[target_pos + 2] = sprite_pixels[source_pos + 0];
-        pixel[target_pos + 1] = sprite_pixels[source_pos + 0];
-        pixel[target_pos + 0] = sprite_pixels[source_pos + 1];
-      }
-    }
-    SDL_UnlockTexture(my_texture);
-    SDL_UnlockSurface(image);
-    hypervisor->g_sprite = my_texture;
+    LOG("%s", "Detected grayscale sprite image. Converting to RGBA ...");
+    r_offset = 0;
+    g_offset = 0;
+    b_offset = 0;
+    alpha_offset = 1;
   } else if (image->format->BytesPerPixel == 4u) {
-    LOG("%s", "Detected RGB image. No conversion required.");
-    hypervisor->g_sprite = IMG_LoadTexture(hypervisor->g_renderer, sprite_filename);
+    LOG("%s", "Detected RGBA-like image. No conversion required.");
+    r_offset = 0;
+    g_offset = 1;
+    b_offset = 2;
+    alpha_offset = 3;
   } else {
     LOG("%s", "Could not process sprite image!");
+    SDL_FreeFormat(pixel_format);
+    SDL_DestroyTexture(my_texture);
+    SDL_FreeSurface(image);
+    return 0u;
   }
+  unsigned char* pixel;
+  int pitch = 0;
+  int lock_result = SDL_LockTexture(my_texture, NULL, (void**)&pixel, &pitch);
+  lock_result |= SDL_LockSurface(image);
+  if (lock_result != 0) {
+      LOG("%s: %s", "Could not lock texture or surface", SDL_GetError());
+      SDL_FreeFormat(pixel_format);
+      SDL_DestroyTexture(my_texture);
+      SDL_FreeSurface(image);
+      return 0;
+  }
+  unsigned char* sprite_pixels = image->pixels;
+  for (int i = 0; i < image->h; ++i) {
+    uint32_t* target_row = (uint32_t*)(pixel + i * pitch);
+    for (int j = 0, l = 0; l < image->w; j += image->format->BytesPerPixel, l++) {
+      int source_pos = (i * image->pitch) + j;
+      target_row[l]  = SDL_MapRGBA(pixel_format, sprite_pixels[source_pos + r_offset],
+                                   sprite_pixels[source_pos + g_offset], sprite_pixels[source_pos + b_offset],
+                                   sprite_pixels[source_pos + alpha_offset]);
+    }
+  }
+  SDL_UnlockTexture(my_texture);
+  SDL_UnlockSurface(image);
+  SDL_FreeFormat(pixel_format);
+  hypervisor->g_sprite = my_texture;
   SDL_FreeSurface(image);
   SDL_assert(hypervisor->g_sprite);
-  uint8_t inverted = load_inverted_textures(hypervisor);
+  uint8_t inverted = system_loadInvertedTextures(hypervisor);
   SDL_SetTextureBlendMode(hypervisor->g_sprite, SDL_BLENDMODE_BLEND);
   SDL_SetTextureBlendMode(hypervisor->g_inverted_sprite, SDL_BLENDMODE_BLEND);
   return inverted;
 }
 
 static uint8_t load_sounds(hypervisor_s* hypervisor) {
+  if (!SDL_WasInit(SDL_INIT_AUDIO)) {
+    return 0u;
+  }
   const char* audio_file_path[AUDIO_FILE_COUNT] = {jump_sound_file, point_sound_file, die_sound_file};
   for (unsigned i = 0; i < AUDIO_FILE_COUNT; ++i) {
     uint32_t wav_length    = 0;
@@ -322,9 +397,16 @@ static uint8_t system_init(hypervisor_s* hypervisor) {
   SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE, "1");
   SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5, "1");
   SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
-  if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+  if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
     LOG("SDL could not initialize! SDL_Error: %s", SDL_GetError());
     return 0u;
+  }
+  // Sound and input devices are optional: the game stays playable with keyboard only and without sound
+  if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+    LOG("Audio disabled, SDL could not initialize audio: %s", SDL_GetError());
+  }
+  if (SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC) < 0) {
+    LOG("Joystick disabled, SDL could not initialize input devices: %s", SDL_GetError());
   }
   LOG("Size of dinorunner structure: %u", (unsigned)sizeof(hypervisor->dinorunner));
   hypervisor->g_window = SDL_CreateWindow(kWindowName, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, kWindowWidth,
@@ -338,21 +420,28 @@ static uint8_t system_init(hypervisor_s* hypervisor) {
     LOG("SDL Renderer could not be created: %s", SDL_GetError());
     return 0u;
   }
-  render_background(hypervisor);
-  load_sprite(hypervisor);
+  if (!render_background(hypervisor)) {
+    return 0u;
+  }
+  uint8_t load_status = system_loadSprite(hypervisor);
+  if (load_status != 1u) {
+      LOG("%s", "Could not load sprites");
+      return 0u;
+  }
   SDL_SetRenderTarget(hypervisor->g_renderer, NULL);
   int status = SDL_RenderCopy(hypervisor->g_renderer, hypervisor->g_background, NULL, NULL);
   SDL_assert(status == 0);
   SDL_RenderPresent(hypervisor->g_renderer);
   SDL_UpdateWindowSurface(hypervisor->g_window);
   SDL_assert(status == 0);
-  status = load_sounds(hypervisor);
-  SDL_assert(status == 1);
+  if (!load_sounds(hypervisor)) {
+    LOG("%s", "Sound effects disabled");
+  }
   load_scorefile(hypervisor);
   SDL_initFramerate(&hypervisor->fps_manager);
   SDL_setFramerate(&hypervisor->fps_manager, kFrameRate);
   dinorunner_seed((unsigned short)time(NULL));
-  status = dinorunner_init(&hypervisor->dinorunner, &kGameDimension, hypervisor);
+  status = dinorunner_init(&hypervisor->dinorunner, &kGameDimension, &kCallbacks, hypervisor);
   return status;
 }
 
@@ -419,7 +508,9 @@ static uint8_t system_exit(hypervisor_s* hypervisor) {
   unload_joystick(hypervisor);
   for (unsigned i = 0; i < sizeof(hypervisor->sound_effect) / sizeof(*hypervisor->sound_effect); ++i) {
     audio_s* sound_effect = &hypervisor->sound_effect[i];
-    SDL_CloseAudioDevice(sound_effect->audio_device_id);
+    if (sound_effect->audio_device_id > 0) {
+      SDL_CloseAudioDevice(sound_effect->audio_device_id);
+    }
     if (sound_effect->pos != NULL) {
       SDL_FreeWAV(sound_effect->pos);
     }
@@ -431,7 +522,7 @@ static uint8_t system_exit(hypervisor_s* hypervisor) {
   return 1u;
 }
 
-unsigned char dinorunner_writehighscore(unsigned long high_score, void* user_data) {
+static unsigned char frontend_writehighscore(unsigned long high_score, void* user_data) {
   LOG("Writing highscore: %lu", high_score);
   if (user_data == NULL) {
     return 0u;
@@ -456,7 +547,7 @@ unsigned char dinorunner_writehighscore(unsigned long high_score, void* user_dat
   return 1u;
 }
 
-unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_data) {
+static unsigned char frontend_readhighscore(unsigned long* high_score, void* user_data) {
   LOG("%s", "Reading Highscore");
   if (user_data == NULL) {
     return 0u;
@@ -479,12 +570,12 @@ unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_dat
   return 1u;
 }
 
-unsigned long dinorunner_gettimestamp(void* user_data) {
+static unsigned long frontend_gettimestamp(void* user_data) {
   (void)user_data;
   return (unsigned long)SDL_GetTicks();
 }
 
-unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_data) {
+static unsigned char frontend_playsound(enum dinorunner_sound_e sound, void* user_data) {
   hypervisor_s* hypervisor = (hypervisor_s*)user_data;
   if (hypervisor == NULL) {
     return 0u;
@@ -495,12 +586,15 @@ unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_dat
     return 0u;
   }
   audio_s* audio = &hypervisor->sound_effect[sound_index];
+  if (audio->audio_device_id <= 0) {
+    return 0u;
+  }
   SDL_QueueAudio(audio->audio_device_id, audio->pos, audio->length);
   SDL_PauseAudioDevice(audio->audio_device_id, 0);
   return 1u;
 }
 
-unsigned char dinorunner_vibrate(unsigned duration, void* user_data) {
+static unsigned char frontend_vibrate(unsigned duration, void* user_data) {
   hypervisor_s* hypervisor = (hypervisor_s*)user_data;
   if (hypervisor == NULL) {
     return 0u;
@@ -515,7 +609,7 @@ unsigned char dinorunner_vibrate(unsigned duration, void* user_data) {
   return result != -1;
 }
 
-unsigned char dinorunner_clearcanvas(void* user_data) {
+static unsigned char frontend_clearcanvas(void* user_data) {
   hypervisor_s* hypervisor = (hypervisor_s*)user_data;
   if (hypervisor == NULL) {
     return 0u;
@@ -541,8 +635,8 @@ unsigned char dinorunner_clearcanvas(void* user_data) {
   return 1u;
 }
 
-unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, unsigned char opacity,
-                              void* user_data) {
+static unsigned char frontend_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, unsigned char opacity,
+                                   void* user_data) {
   if (user_data == NULL) {
     return 0u;
   }
@@ -723,7 +817,7 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
   dinorunner_isalive(&hypervisor->dinorunner, &is_alive);
   if (is_alive) {
     if (hypervisor->intro_clip_width < kGameDimension.width) {
-      hypervisor->intro_clip_width += (unsigned)(2 * ((float)kFrameRate / DINORUNNER_CONFIG_CORE_FPS));
+      hypervisor->intro_clip_width += (unsigned)(2.0f * ((float)kFrameRate / DINORUNNER_CONFIG_CORE_FPS));
     }
   }
   SDL_RenderSetClipRect(hypervisor->g_renderer, &clip_rect);
@@ -732,13 +826,7 @@ unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_
   return 1u;
 }
 
-unsigned char dinorunner_log(void* user_data, const char* format, ...) {
+static unsigned char frontend_log(const char* message, void* user_data) {
   (void)user_data;
-  char buffer[256];
-  va_list args;
-  va_start(args, format);
-  int ret = vsprintf(buffer, format, args);
-  fprintf(stderr, "%s", buffer);
-  va_end(args);
-  return ret != 0;
+  return fputs(message, stderr) >= 0;
 }

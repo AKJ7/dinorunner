@@ -2,6 +2,10 @@ dinorunner/bin
 dinorunner/build
 dinorunner/lib
 demo/bin
-demo/build
 demo/lib
+demo/sdl/bin
 dinorunner_highscore.txt
+build/
+bin/
+lib/
+.idea/

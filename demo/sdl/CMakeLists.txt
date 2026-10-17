@@ -1,0 +1,35 @@
+cmake_minimum_required(VERSION 3.14)
+
+project(dinorunner-sdl
+    VERSION 1.3.2
+    DESCRIPTION "Running examples of the Dinorunner libray"
+    LANGUAGES C CXX)
+
+option(DINORUNNER_SDL_EXAMPLE_VENDORED "Use vendored libraries" OFF)
+
+message(STATUS "Loading dinorunner SDL demo")
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+set(DINORUNNER_LIB_PATH ${PROJECT_SOURCE_DIR}/../../dinorunner)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+
+include(FindPkgConfig)
+include(FindPackageHandleStandardArgs)
+
+if (DINORUNNER_SDL_EXAMPLE_VENDORED)
+    include(dependencies)
+else()
+    find_package(SDL2 REQUIRED)
+    find_package(SDL2_IMAGE REQUIRED)
+    include_directories(${SDL2_INCLUDE_DIRS})
+    include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
+    PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
+    PKG_SEARCH_MODULE(SDL2_gfx REQUIRED SDL2_gfx)
+    set(DINORUNNER_SDL_EXAMPLE_LIBARIES ${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES} ${SDL2_gfx_LIBRARIES})
+endif()
+
+add_executable(dinorunner_sdl demo.c)
+find_package(dinorunner PATHS ${DINORUNNER_LIB_PATH}/build REQUIRED)
+target_link_libraries(dinorunner_sdl PRIVATE ${DINORUNNER_SDL_EXAMPLE_LIBARIES} dinorunner::dinorunner_static)

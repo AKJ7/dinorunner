@@ -1,0 +1,18 @@
+[package]
+name = "dinorunner"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+authors = ["AKJ7"]
+description = "Rust bindings of libdinorunner, Chrome's Dino game as a platform independent library"
+license = "GPL-3.0-only"
+repository = "https://github.com/AKJ7/dinorunner"
+keywords = ["game", "dino", "trex", "ffi"]
+categories = ["games", "api-bindings"]
+links = "dinorunner"
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]
+cc = "1"

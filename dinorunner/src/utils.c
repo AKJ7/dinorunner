@@ -7,6 +7,7 @@
  */
 
 #include "dinorunner.h"
+#include "platform.h"
 
 static unsigned short lfsr = 0xACE1u;
 
@@ -48,9 +49,15 @@ float dinorunner_floorf(float x) {
   int exponent        = (val.i >> 23) & 0xff;  // extract the exponent field;
   int fractional_bits = 127 + 23 - exponent;
   if (fractional_bits > 23)  // abs(x) < 1.0
-    return 0.0;
+    return x < 0.0f ? -1.0f : 0.0f;
   if (fractional_bits > 0) {
-    val.i &= ~((1U << fractional_bits) - 1);
+    unsigned fractional_mask = (1U << fractional_bits) - 1;
+    if (val.i & fractional_mask) {
+      val.i &= ~fractional_mask;
+      // truncation rounds towards zero, negative numbers need to be rounded down
+      if (x < 0.0f)
+        val.f -= 1.0f;
+    }
   }
   return val.f;
 }
@@ -93,9 +100,12 @@ unsigned dinorunner_getrandomnumb(unsigned min_value, unsigned max_value) {
     min_value = max_value;
   }
   unsigned interval = max_value - min_value;
-  return min_value + dinorunner_roundf(random_value * interval);
+  unsigned offset   = dinorunner_floorf(random_value * (interval + 1u));
+  // random_value can be exactly 1.0f
+  return min_value + (offset > interval ? interval : offset);
 }
 
 void dinorunner_seed(unsigned short random_seed) {
-  lfsr = random_seed;
+  // The LFSR never leaves the all-zero state
+  lfsr = random_seed ? random_seed : 0xACE1u;
 }
