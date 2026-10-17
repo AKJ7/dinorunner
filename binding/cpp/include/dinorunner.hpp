@@ -10,8 +10,7 @@
 
 #pragma once
 
-#include <cstdarg>
-#include <cstdlib>
+#include <exception>
 #include <optional>
 #include <ostream>
 extern "C" {
@@ -49,7 +48,19 @@ static inline void Seed(unsigned short random_seed) {
 
 class Dinorunner : private dinorunner_s {
  public:
-  Dinorunner(const Dimension& game_dimension) : game_dimension_{game_dimension} {}
+  explicit Dinorunner(const Dimension& game_dimension) : game_dimension_{game_dimension} {}
+  virtual ~Dinorunner() = default;
+
+  // The C engine keeps a pointer to this object to call it back: it must not be copied or moved
+  Dinorunner(const Dinorunner&)            = delete;
+  Dinorunner& operator=(const Dinorunner&) = delete;
+  Dinorunner(Dinorunner&&)                 = delete;
+  Dinorunner& operator=(Dinorunner&&)      = delete;
+
+  /**
+   * @brief Get the dimension of the game canvas
+   */
+  inline const Dimension& GameDimension() const noexcept { return game_dimension_; }
 
   /**
    * @brief Initialize engine
@@ -57,7 +68,11 @@ class Dinorunner : private dinorunner_s {
    * @return true on success, false otherwise
    */
   inline bool Init() {
-    auto result = dinorunner_init(this, &game_dimension_, this);
+    static constexpr dinorunner_callbacks_s kCallbacks{
+        &OnGetTimestamp, &OnClearCanvas,    &OnDraw,           &OnPlaySound,
+        &OnVibrate,      &OnReadHighScore, &OnWriteHighScore, &OnLog,
+    };
+    auto result = dinorunner_init(this, &game_dimension_, &kCallbacks, this);
     return result == 1u;
   }
 
@@ -100,7 +115,7 @@ class Dinorunner : private dinorunner_s {
   /**
    * @brief Trigger an UP pressed event
    */
-  inline void KeyUp() noexcept { dinorunner_onkeydown(this); }
+  inline void KeyUp() noexcept { dinorunner_onkeyup(this); }
 
   /**
    * @brief Trigger a DOWN pressed event
@@ -112,6 +127,12 @@ class Dinorunner : private dinorunner_s {
    * Useful for variadic jump heights
    */
   inline void KeyNone() noexcept { dinorunner_onkeynone(this); }
+
+  /**
+  * The following callbacks are called by the C engine. Exceptions thrown by an
+  * implementation are caught at the C boundary and reported as failure, except in
+  * GetTimestamp, where they terminate the program: the game cannot run without a clock.
+  */
 
   /**
   * @brief Called by the C-API to request a read of the high-score
@@ -177,84 +198,71 @@ class Dinorunner : private dinorunner_s {
   */
   virtual bool Log(const char* message) = 0;
 
- public:
-  const Dimension& game_dimension_;
+ private:
+  static Dinorunner& Self(void* user_data) noexcept {
+    if (user_data == nullptr) {
+      std::terminate();
+    }
+    return *static_cast<Dinorunner*>(user_data);
+  }
+
+  // Keeps exceptions from unwinding through the C engine
+  template <typename Callback>
+  static unsigned char Forward(Callback&& callback) noexcept {
+    try {
+      return callback() ? 1u : 0u;
+    } catch (...) {
+      return 0u;
+    }
+  }
+
+  static unsigned long OnGetTimestamp(void* user_data) noexcept {
+    // noexcept: an exception terminates the program, there is no meaningful fallback time
+    return Self(user_data).GetTimestamp();
+  }
+
+  static unsigned char OnClearCanvas(void* user_data) noexcept {
+    return Forward([&] { return Self(user_data).ClearCanvas(); });
+  }
+
+  static unsigned char OnDraw(Sprite sprite, const Pos* pos, unsigned char opacity, void* user_data) noexcept {
+    if (pos == nullptr) {
+      return 0u;
+    }
+    return Forward([&] { return Self(user_data).Draw(sprite, *pos, opacity); });
+  }
+
+  static unsigned char OnPlaySound(Sound sound, void* user_data) noexcept {
+    return Forward([&] { return Self(user_data).PlaySound(sound); });
+  }
+
+  static unsigned char OnVibrate(unsigned duration, void* user_data) noexcept {
+    return Forward([&] { return Self(user_data).Vibrate(duration); });
+  }
+
+  static unsigned char OnReadHighScore(unsigned long* high_score, void* user_data) noexcept {
+    if (high_score == nullptr) {
+      return 0u;
+    }
+    return Forward([&] { return Self(user_data).ReadHighScore(*high_score); });
+  }
+
+  static unsigned char OnWriteHighScore(unsigned long high_score, void* user_data) noexcept {
+    return Forward([&] { return Self(user_data).WriteHighScore(high_score); });
+  }
+
+  static unsigned char OnLog(const char* message, void* user_data) noexcept {
+    if (message == nullptr) {
+      return 0u;
+    }
+    return Forward([&] { return Self(user_data).Log(message); });
+  }
+
+  Dimension game_dimension_;
 };
-
-extern "C" {
-unsigned long dinorunner_gettimestamp(void* user_data) {
-  if (user_data == nullptr) {
-    std::abort();
-  }
-  const auto result = reinterpret_cast<Dinorunner*>(user_data)->GetTimestamp();
-  return result;
-}
-
-unsigned char dinorunner_writehighscore(unsigned long high_score, void* user_data) {
-  if (user_data == nullptr) {
-    std::abort();
-  }
-  auto result = reinterpret_cast<Dinorunner*>(user_data)->WriteHighScore(high_score);
-  return result == true;
-}
-
-unsigned char dinorunner_readhighscore(unsigned long* high_score, void* user_data) {
-  if (high_score == nullptr) {
-    std::abort();
-  }
-  const auto result = reinterpret_cast<Dinorunner*>(user_data)->ReadHighScore(*high_score);
-  return result == true;
-}
-
-unsigned char dinorunner_playsound(enum dinorunner_sound_e sound, void* user_data) {
-  if (user_data == nullptr) {
-    std::abort();
-  }
-  const auto result = reinterpret_cast<Dinorunner*>(user_data)->PlaySound(sound);
-  return result == true;
-}
-
-unsigned char dinorunner_vibrate(unsigned duration, void* user_data) {
-  if (user_data == nullptr) {
-    std::abort();
-  }
-  const auto result = reinterpret_cast<Dinorunner*>(user_data)->Vibrate(duration);
-  return result == true;
-}
-
-unsigned char dinorunner_clearcanvas(void* user_data) {
-  if (user_data == nullptr) {
-    std::abort();
-  }
-  const auto result = reinterpret_cast<Dinorunner*>(user_data)->ClearCanvas();
-  return result == true;
-}
-
-unsigned char dinorunner_draw(enum dinorunner_sprite_e sprite, const struct pos_s* pos, unsigned char opacity,
-                              void* user_data) {
-  if (user_data == nullptr || pos == nullptr) {
-    std::abort();
-  }
-  const auto result = reinterpret_cast<Dinorunner*>(user_data)->Draw(sprite, *pos, opacity);
-  return result == true;
-}
-
-unsigned char dinorunner_log(void* user_data, const char* format, ...) {
-  if (user_data == nullptr) {
-    std::abort();
-  }
-  char buffer[256];
-  std::va_list args;
-  va_start(args, format);
-  std::vsprintf(buffer, format, args);
-  va_end(args);
-  const auto result = reinterpret_cast<Dinorunner*>(user_data)->Log(buffer);
-  return result == true;
-}
-}
 }  // namespace dinorunner
 
-std::ostream& operator<<(std::ostream& o, const dinorunner::Version& version) {
+inline std::ostream& operator<<(std::ostream& o, const dinorunner::Version& version) {
   return o << "v" << static_cast<unsigned>(version.major) << "." << static_cast<unsigned>(version.minor) << "."
            << static_cast<unsigned>(version.patch);
 }

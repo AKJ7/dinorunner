@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dinorunner"
+version = "0.1.0"
+description = "Python bindings of libdinorunner, Chrome's Dino game as a platform independent library"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "GPL-3.0-only"
+authors = [{ name = "AKJ7" }]
+keywords = ["game", "dino", "trex"]
+classifiers = [
+    "Programming Language :: C",
+    "Programming Language :: Python :: 3",
+    "Topic :: Games/Entertainment",
+]
+
+[project.urls]
+Repository = "https://github.com/AKJ7/dinorunner"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+dinorunner = ["py.typed", "*.pyi"]

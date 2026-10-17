@@ -7,14 +7,15 @@
  */
 
 #include "dinorunner.h"
+#include "platform.h"
 
 unsigned dinorunner_distancemeter_getactualdistance(unsigned distance) {
   return distance ? dinorunner_roundf(distance * DINORUNNER_CONFIG_DISTANCEMETER_COEFFICIENT) : 0;
 }
 
-static unsigned long distancemeter_readhighscore(void* user_data) {
+static unsigned long distancemeter_readhighscore(const struct dinorunner_platform_s* platform) {
   unsigned long high_score  = 0;
-  unsigned char read_result = dinorunner_readhighscore(&high_score, user_data);
+  unsigned char read_result = dinorunner_platform_readhighscore(&high_score, platform);
   if (read_result != 0) {
     return high_score;
   }
@@ -46,8 +47,8 @@ static void dinorunner_distancemeter_calcxpos(struct distance_meter_s* distance_
 }
 
 void dinorunner_distancemeter_writehighscore(struct distance_meter_s* distance_meter, unsigned distance,
-                                             void* user_data) {
-  unsigned char read_result = dinorunner_writehighscore(distance, user_data);
+                                             const struct dinorunner_platform_s* platform) {
+  unsigned char read_result = dinorunner_platform_writehighscore(distance, platform);
   if (read_result != 0) {
     if (distance_meter->high_score < distance) {
       distance_meter->high_score = distance;
@@ -56,7 +57,7 @@ void dinorunner_distancemeter_writehighscore(struct distance_meter_s* distance_m
 }
 
 unsigned char dinorunner_distancemeter_draw(const struct distance_meter_s* distance_meter, unsigned digit_pos,
-                                            unsigned value, unsigned short opt_high, void* user_data) {
+                                            unsigned value, unsigned short opt_high, const struct dinorunner_platform_s* platform) {
   TREX_UNUSED(digit_pos);
   char buffer[24];
   char* ptr = buffer;
@@ -64,12 +65,12 @@ unsigned char dinorunner_distancemeter_draw(const struct distance_meter_s* dista
     if (distance_meter->high_score != 0) {
       struct pos_s pos = {.x = distance_meter->x - distance_meter->width * distance_meter->max_score_units,
                           .y = distance_meter->y};
-      dinorunner_draw(DINORUNNER_SPRITE_HI, &pos, 0xFF, user_data);
+      dinorunner_platform_draw(DINORUNNER_SPRITE_HI, &pos, 0xFF, platform);
       unsigned parsed = long_to_digit(distance_meter->high_score, ptr, distance_meter->max_score_units);
       for (unsigned counter = 0; counter < parsed; ++counter) {
         struct pos_s pos = {.x = distance_meter->x - distance_meter->width * 2 + distance_meter->width * counter,
                             .y = distance_meter->y};
-        dinorunner_draw(DINORUNNER_SPRITE_0 + (int)(ptr[counter] - '0'), &pos, 0xFF, user_data);
+        dinorunner_platform_draw(DINORUNNER_SPRITE_0 + (int)(ptr[counter] - '0'), &pos, 0xFF, platform);
       }
     }
   } else {
@@ -78,20 +79,20 @@ unsigned char dinorunner_distancemeter_draw(const struct distance_meter_s* dista
       struct pos_s pos = {.x = distance_meter->x + distance_meter->width * 2 + distance_meter->width * counter +
                                distance_meter->width * 2,
                           .y = distance_meter->y};
-      dinorunner_draw(DINORUNNER_SPRITE_0 + (int)(ptr[counter] - '0'), &pos, 0xFF, user_data);
+      dinorunner_platform_draw(DINORUNNER_SPRITE_0 + (int)(ptr[counter] - '0'), &pos, 0xFF, platform);
     }
   }
   return 1u;
 }
 
 static inline void dinorunner_distancemeter_drawhighscore(const struct distance_meter_s* distance_meter,
-                                                          void* user_data) {
-  dinorunner_distancemeter_draw(distance_meter, 0, distance_meter->high_score, 1, user_data);
+                                                          const struct dinorunner_platform_s* platform) {
+  dinorunner_distancemeter_draw(distance_meter, 0, distance_meter->high_score, 1, platform);
 }
 
 unsigned char dinorunner_distancemeter_init(struct distance_meter_s* distance_meter,
                                             const struct dimension_s* sprite_info, unsigned int canvas_width,
-                                            void* user_data) {
+                                            const struct dinorunner_platform_s* platform) {
   distance_meter->max_score_units  = DINORUNNER_CONFIG_DISTANCEMETER_MAXSCOREUNIT;
   distance_meter->achievement      = 0u;
   distance_meter->flash_timer      = 0;
@@ -101,14 +102,14 @@ unsigned char dinorunner_distancemeter_init(struct distance_meter_s* distance_me
   distance_meter->y                = 5;
   distance_meter->width            = sprite_info->width;
   dinorunner_distancemeter_calcxpos(distance_meter, canvas_width);
-  unsigned long high_score   = distancemeter_readhighscore(user_data);
+  unsigned long high_score   = distancemeter_readhighscore(platform);
   distance_meter->high_score = high_score;
-  dinorunner_distancemeter_draw(distance_meter, 0, 0u, 1u, user_data);
+  dinorunner_distancemeter_draw(distance_meter, 0, 0u, 1u, platform);
   return 1u;
 }
 
 unsigned char dinorunner_distancemeter_update(struct distance_meter_s* distance_meter, float delta_time,
-                                              unsigned long distance, void* user_data) {
+                                              unsigned long distance, const struct dinorunner_platform_s* platform) {
   unsigned char play_sound = 0u;
   unsigned char paint      = 1u;
   distance                 = dinorunner_distancemeter_getactualdistance(distance);
@@ -143,13 +144,13 @@ unsigned char dinorunner_distancemeter_update(struct distance_meter_s* distance_
     }
   }
   if (paint) {
-    dinorunner_distancemeter_draw(distance_meter, 0, distance, 0, user_data);
+    dinorunner_distancemeter_draw(distance_meter, 0, distance, 0, platform);
   }
-  dinorunner_distancemeter_drawhighscore(distance_meter, user_data);
+  dinorunner_distancemeter_drawhighscore(distance_meter, platform);
   return play_sound;
 }
 
-void dinorunner_distancemeter_reset(struct distance_meter_s* distance_meter, unsigned long score, void* user_data) {
-  dinorunner_distancemeter_update(distance_meter, 0, score, user_data);
+void dinorunner_distancemeter_reset(struct distance_meter_s* distance_meter, unsigned long score, const struct dinorunner_platform_s* platform) {
+  dinorunner_distancemeter_update(distance_meter, 0, score, platform);
   distance_meter->achievement = 0u;
 }

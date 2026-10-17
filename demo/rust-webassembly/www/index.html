@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dinorunner</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #ffffff;
+      --text: #535353;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: var(--page);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+    }
+    canvas {
+      max-width: calc(100vw - 32px);
+      image-rendering: pixelated;
+      touch-action: none;
+      transition: filter 1.5s ease;
+    }
+    /* Night mode, toggled by the game */
+    canvas.inverted {
+      filter: invert(1);
+    }
+    p {
+      margin: 0;
+      font-size: 14px;
+    }
+    kbd {
+      font-family: inherit;
+      border: 1px solid currentColor;
+      border-radius: 4px;
+      padding: 0 4px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="dinorunner" width="640" height="190"></canvas>
+  <p>Press <kbd>Space</kbd> or <kbd>↑</kbd> to jump, <kbd>↓</kbd> to duck. Tap the game on touch screens.</p>
+  <script type="module">
+    import init from "./pkg/dinorunner_web.js";
+    init().catch((error) => console.error("Could not start dinorunner:", error));
+  </script>
+</body>
+</html>

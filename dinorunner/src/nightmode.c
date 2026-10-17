@@ -7,6 +7,7 @@
  */
 
 #include "dinorunner.h"
+#include "platform.h"
 
 static float dinorunner_nightmode_updateXPos(float current_pos, float speed, unsigned container_width,
                                              float runner_speed) {
@@ -18,7 +19,7 @@ static float dinorunner_nightmode_updateXPos(float current_pos, float speed, uns
   return current_pos;
 }
 
-static unsigned char dinorunner_nightmode_draw(const struct nightmode_s* nightmode, void* user_data) {
+static unsigned char dinorunner_nightmode_draw(const struct nightmode_s* nightmode, const struct dinorunner_platform_s* platform) {
   int opacity = nightmode->opacity * 0xFF;
   if (opacity < 0) {
     opacity = 0;
@@ -29,12 +30,12 @@ static unsigned char dinorunner_nightmode_draw(const struct nightmode_s* nightmo
     for (int i = 0; i < DINORUNNER_CONFIG_NIGHTMODE_NUMBSTARS; ++i) {
       struct pos_s pos              = {.x = dinorunner_roundf(nightmode->stars[i].x), nightmode->stars[i].y};
       enum dinorunner_sprite_e star = DINORUNNER_SPRITE_STAR1 + i;
-      dinorunner_draw(star, &pos, (unsigned char)opacity, user_data);
+      dinorunner_platform_draw(star, &pos, (unsigned char)opacity, platform);
     }
   }
   const struct pos_s pos        = {.x = dinorunner_roundf(nightmode->x_pos), nightmode->y_pos};
   enum dinorunner_sprite_e moon = DINORUNNER_SPRITE_MOON1 + nightmode->current_phase;
-  dinorunner_draw(moon, &pos, (unsigned char)opacity, user_data);
+  dinorunner_platform_draw(moon, &pos, (unsigned char)opacity, platform);
   return 1u;
 }
 
@@ -57,7 +58,7 @@ void dinorunner_nightmode_init(struct nightmode_s* nightmode, unsigned container
 }
 
 unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigned char show_nightmode,
-                                          unsigned container_width, float current_speed, void* user_data) {
+                                          unsigned container_width, float current_speed, const struct dinorunner_platform_s* platform) {
   if (show_nightmode && nightmode->opacity == 0) {
     nightmode->current_phase++;
     if (nightmode->current_phase >= DINORUNNER_CONFIG_NIGHTMODE_MOONPHASES) {
@@ -80,7 +81,7 @@ unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigne
             nightmode->stars[i].x, (float)DINORUNNER_CONFIG_NIGHTMODE_STARSPEED, container_width, current_speed);
       }
     }
-    dinorunner_nightmode_draw(nightmode, user_data);
+    dinorunner_nightmode_draw(nightmode, platform);
   } else {
     nightmode->opacity = 0;
     dinorunner_nightmode_placestars(nightmode, container_width);
@@ -89,8 +90,8 @@ unsigned char dinorunner_nightmode_update(struct nightmode_s* nightmode, unsigne
   return 1u;
 }
 
-void dinorunner_nightmode_reset(struct nightmode_s* nightmode, unsigned container_width, void* user_data) {
+void dinorunner_nightmode_reset(struct nightmode_s* nightmode, unsigned container_width, const struct dinorunner_platform_s* platform) {
   nightmode->current_phase = 0;
   nightmode->opacity       = 0;
-  dinorunner_nightmode_update(nightmode, 0, container_width, 0, user_data);
+  dinorunner_nightmode_update(nightmode, 0, container_width, 0, platform);
 }

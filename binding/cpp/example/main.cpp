@@ -1,17 +1,16 @@
 #include <chrono>
-#include <cstdint>
 #include <iostream>
-#include <numeric>
+#include <limits>
 #include <random>
 #include <type_traits>
 #include "dinorunner.hpp"
 
 static constexpr dinorunner::Dimension kGameDimension{600, 150};
 
-class MyDinorunner final : private virtual dinorunner::Dinorunner {
+class MyDinorunner final : public dinorunner::Dinorunner {
  public:
   MyDinorunner(const dinorunner::Dimension& game_dimension)
-      : Dinorunner(game_dimension), nightmode_interpolation_{}, high_score_{} {
+      : Dinorunner(game_dimension), start_time_{std::chrono::steady_clock::now()}, high_score_{} {
     const auto seed = GetSeed<unsigned short>();
     dinorunner::Seed(seed);
   }
@@ -27,12 +26,13 @@ class MyDinorunner final : private virtual dinorunner::Dinorunner {
 
   bool Run() {
     bool result = true;
-    // Run for 3 frame.
+    // Press "up" to start the game, then run for 3 frames.
     // In real applications, keep running until the rendering window is closed
+    KeyUp();
     for (unsigned frame_count = 0; frame_count < 3u; ++frame_count) {
       result &= Update();
     }
-    return true;
+    return result;
   }
 
  private:
@@ -47,8 +47,8 @@ class MyDinorunner final : private virtual dinorunner::Dinorunner {
   }
 
   unsigned long GetTimestamp() override {
-    const auto now      = std::chrono::system_clock::now();
-    const auto duration = now.time_since_epoch();
+    // Monotonic time since the game was created: immune to clock changes and small enough for 32-bit longs
+    const auto duration = std::chrono::steady_clock::now() - start_time_;
     const auto millis   = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     return static_cast<unsigned long>(millis);
   }
@@ -80,7 +80,7 @@ class MyDinorunner final : private virtual dinorunner::Dinorunner {
   }
 
  private:
-  std::int16_t nightmode_interpolation_;
+  std::chrono::steady_clock::time_point start_time_;
   unsigned long high_score_;
   std::random_device random_device_;
 };
